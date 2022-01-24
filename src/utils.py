@@ -3,7 +3,11 @@ import logging
 import math
 import os
 import random
+import sys
 import time
+import traceback
+from contextlib import contextmanager
+from typing import Optional
 
 import git
 import numpy as np
@@ -15,6 +19,34 @@ from omegaconf import OmegaConf
 from omegaconf.errors import ConfigAttributeError
 
 log = logging.getLogger(__name__)
+
+_ALWAYS_CATCH = False
+
+
+def set_always_catch(catch: bool):
+    global _ALWAYS_CATCH
+    _ALWAYS_CATCH = catch
+
+
+def in_kaggle() -> bool:
+    return 'kaggle_web_client' in sys.modules
+
+
+@contextmanager
+def catch_everything_in_kaggle(name: Optional[str] = None):
+    try:
+        yield
+    except Exception:
+        msg = f"WARNINGS: exception occurred in {name or '(unknown)'}: {traceback.format_exc()}"
+        log.warning(msg)
+        print(msg)
+
+        if in_kaggle() or _ALWAYS_CATCH:
+            # ...catch and suppress if this is executed in kaggle
+            pass
+        else:
+            # re-raise if this is executed outside of kaggle
+            raise
 
 
 def fix_seed(seed=42):
@@ -112,7 +144,7 @@ def reduce_mem_usage(df, verbose=True):
     return df_out
 
 
-class AverageMeter(object):
+class AverageMeter:
     """Computes and stores the average and current value"""
 
     def __init__(self):
