@@ -3,6 +3,7 @@ import os
 
 import hydra
 import pandas as pd
+from omegaconf.errors import ConfigAttributeError
 
 import src.utils as utils
 from src.get_score import record_result
@@ -26,7 +27,16 @@ def main(c):
 
     oof_df = pd.DataFrame()
     losses = utils.AverageMeter()
+
+    single_run = False
+
     for fold in range(c.params.n_fold):
+        try:
+            fold = int(c.settings.run_fold)
+            single_run = True
+        except ConfigAttributeError:
+            pass
+
         log.info(f"========== fold {fold} training ==========")
         utils.fix_seed(c.params.seed + fold)
 
@@ -37,10 +47,11 @@ def main(c):
         log.info(f"========== fold {fold} result ==========")
         record_result(c, _oof_df, fold, loss)
 
-        if c.settings.debug:
+        if c.settings.debug or single_run:
             break
 
-    oof_df.to_csv("oof_df.csv", index=False)
+    # oof_df.to_csv("oof_df.csv", index=False)
+    oof_df[["row_id", "time_id", "investment_id", "target", "preds", "fold"]].to_feather("oof_df.f")
 
     log.info("========== final result ==========")
     score = record_result(c, oof_df, c.params.n_fold, losses.avg)
@@ -48,7 +59,7 @@ def main(c):
     log.info("Done.")
 
     utils.teardown_wandb(c, run, losses.avg)
-    utils.send_result_to_slack(c, score, losses.avg)
+    utils.send_result_to_slack(score, losses.avg)
 
 
 if __name__ == "__main__":

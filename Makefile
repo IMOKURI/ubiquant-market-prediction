@@ -1,14 +1,26 @@
 .PHONY: help build train
 .DEFAULT_GOAL := help
 
-NOW = $(shell date '+%Y%m%d-%H%M%S')
+NOW = $(shell date '+%Y%m%d-%H%M%S-%N')
 
 
 train: ## Run training
-	@nohup python train.py > /tmp/nohup_$(NOW).log &
+	@nohup python train.py +settings.run_fold=0 > /tmp/nohup_$(NOW).log &
+	sleep 2
+	@nohup python train.py +settings.run_fold=1 > /tmp/nohup_$(NOW).log &
+	sleep 2
+	@nohup python train.py +settings.run_fold=2 > /tmp/nohup_$(NOW).log &
+	sleep 2
+	@nohup python train.py +settings.run_fold=3 > /tmp/nohup_$(NOW).log &
+	sleep 2
+	@nohup python train.py +settings.run_fold=4 > /tmp/nohup_$(NOW).log &
+	sleep 2
+	@nohup python train.py +settings.run_fold=5 > /tmp/nohup_$(NOW).log &
+	sleep 2
+	@nohup python train.py +settings.run_fold=6 > /tmp/nohup_$(NOW).log &
 
 debug: ## Run training debug mode
-	@python train.py settings.debug=True hydra.verbose=True
+	@python train.py settings.debug=True hydra.verbose=True +settings.run_fold=1
 
 build: clean-build ## Build package
 	@python encode.py ./src ./config

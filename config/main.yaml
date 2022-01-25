@@ -8,7 +8,7 @@ hydra:
   job_logging:
     formatters:
       simple:
-        format: '[%(levelname)s][%(name)s] - %(message)s'
+        format: '%(asctime)s [%(levelname)s][%(module)s] %(message)s'
   # sweep:
   #   dir: ../multirun/${now:%Y-%m-%d_%H-%M-%S}
   #   subdir: ${hydra.job.num}
@@ -40,7 +40,7 @@ settings:
 
   dirs:
     working: ${hydra:runtime.cwd}
-    input: ${hydra:runtime.cwd}/../input/
+    input: ${hydra:runtime.cwd}/../inputs/
     # train_image: ${settings.dirs.input}train/
     # test_image: ${settings.dirs.input}test/
 
@@ -50,7 +50,7 @@ settings:
     - example_sample_submission.csv
 
   debug: False
-  n_debug_data: 1000
+  n_debug_data: 100_000
 
   amp: True
   multi_gpu: True
@@ -60,9 +60,9 @@ params:
   n_class: 1
   n_fold: 7
   skip_training: false
-  epoch: 30
+  epoch: 10
   es_patience: 0
-  batch_size: 96
+  batch_size: 640
   gradient_acc_step: 1
   max_grad_norm: 1000
   fold: group
@@ -76,8 +76,8 @@ params:
   #   - dir: ""
   #     model: ""
   #     name: ""
-  dropout: 0.2
-  criterion: MSELoss
+  # dropout: 0.0
+  criterion: RMSELoss
   optimizer: Adam
   scheduler: CosineAnnealingWarmupRestarts
   lr: 1e-3

@@ -15,28 +15,36 @@ class InputData:
         self.c = c
         for file_name in c.settings.inputs:
             stem = os.path.splitext(file_name)[0]
-            file_path = os.path.join(c.settings.dirs.input, file_name)
+            original_file_path = os.path.join(c.settings.dirs.input, file_name)
+            f_file_path = original_file_path.replace(".csv", ".f")
 
-            if os.path.exists(file_path):
-                log.info(f"Load file. path: {file_path}")
-                df = pd.read_csv(file_path)
+            if os.path.exists(f_file_path):
+                log.info(f"Load feather file. path: {f_file_path}")
+                df = pd.read_feather(f_file_path)
 
-                # if stem == "train":
-                #     create_features(c, df)
-                #     df = select_features(c, df)
-
-                if c.settings.debug:
-                    df = sample_for_debug(c, df)
-
-                if stem == "train" and use_fold:
-                    df = make_fold(c, df)
-
-                df = reduce_mem_usage(df)
-
-                setattr(self, stem, df)
+            elif os.path.exists(original_file_path):
+                log.info(f"Load original file. path: {original_file_path}")
+                df = pd.read_csv(original_file_path)
+                df.to_feather(f_file_path)
 
             else:
-                log.warning(f"File does not exist. path: {file_path}")
+                log.warning(f"File does not exist. path: {original_file_path}")
+                continue
+
+            # if stem == "train":
+            #     create_features(c, df)
+            #     df = select_features(c, df)
+
+            # if c.settings.debug:
+            #     df = sample_for_debug(c, df)
+
+            if stem == "train" and use_fold:
+                df = make_fold(c, df)
+
+            df = reduce_mem_usage(df)
+
+            setattr(self, stem, df)
+
 
 
 class OofData:

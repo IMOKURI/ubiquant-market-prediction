@@ -7,6 +7,7 @@ import pandas as pd
 import torch
 import torch.cuda.amp as amp
 import wandb
+from tqdm import tqdm
 
 from .utils import AverageMeter
 # from .get_score import get_score
@@ -58,10 +59,10 @@ def train_fold(c, df, fold, device):
         # ====================================================
         # Training
         # ====================================================
-        iter_train = TimeSeriesAPI(train_folds)
+        iter_train = TimeSeriesAPI(train_folds, scoring=False)
         avg_train_loss = AverageMeter()
 
-        for train_df, train_pred_df in iter_train:
+        for train_df, train_pred_df in tqdm(iter_train):
             train_ds = make_dataset(c, train_df)
             train_loader = make_dataloader(
                 c, train_ds, shuffle=True, drop_last=True)
@@ -90,7 +91,7 @@ def train_fold(c, df, fold, device):
         iter_valid = TimeSeriesAPI(valid_folds)
         avg_val_loss = AverageMeter()
 
-        for valid_df, valid_pred_df in iter_valid:
+        for valid_df, valid_pred_df in tqdm(iter_valid):
             valid_ds = make_dataset(c, valid_df)
             valid_loader = make_dataloader(
                 c, valid_ds, shuffle=False, drop_last=False)
@@ -134,7 +135,7 @@ def train_fold(c, df, fold, device):
             )
 
         es(avg_val_loss.avg, iter_valid.score.avg,
-           model, pd.concat(iter_valid.predictions))
+           model, pd.concat(iter_valid.predictions)["target"].values)
 
         if es.early_stop:
             log.info("Early stopping")

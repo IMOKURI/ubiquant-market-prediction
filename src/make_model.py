@@ -25,6 +25,10 @@ def make_model(c, device=None, model_path=None):
     return model
 
 
+def swish(x):
+    return x * torch.sigmoid(x)
+
+
 class BaseModel(nn.Module):
     def __init__(self, c, pretrained=True):
         super().__init__()
@@ -32,28 +36,20 @@ class BaseModel(nn.Module):
         self.dim = 300
         self.layers = 4
 
+        self.bn_1 = nn.BatchNorm1d(self.dim)
+
         self.fcs = nn.ModuleList(
             [nn.Linear(self.dim, self.dim) for _ in range(self.layers)]
-        )
-
-        self.ln_0 = nn.LayerNorm(self.dim)
-        self.lns = nn.ModuleList(
-            [nn.LayerNorm(self.dim) for _ in range(self.layers)]
-        )
-
-        self.dos = nn.ModuleList(
-            [nn.Dropout(c.params.dropout) for _ in range(self.layers)]
         )
 
         self.head = nn.Linear(self.dim, 1)
 
     def forward(self, x):
         with amp.autocast(enabled=self.amp):
-            x = F.relu(self.ln_0(x))
+            x = self.bn_1(x)
+            for fc in self.fcs:
+                x = swish(fc(x))
 
-            for fc, ln, do in zip(self.fcs, self.lns, self.dos):
-                x = F.relu(ln(fc(do(x)) + x))
-
-            x = torch.sigmoid(self.head(x))
+            x = self.head(x)
 
         return x

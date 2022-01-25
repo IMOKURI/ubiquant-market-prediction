@@ -226,10 +226,10 @@ def get_commit_hash(dir_):
     return sha
 
 
-def send_result_to_slack(c, score, loss):
+def send_result_to_slack(score, loss):
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL", "")
-    msg = f"score: {score:.5f}, loss: {loss:.5f}, model: {c.params.model_name}"
+    msg = f"Run at: {os.path.basename(os.getcwd())}, score: {score:.5f}, loss: {loss:.5f}"
     try:
         requests.post(webhook_url, data=json.dumps({"text": msg}))
     except Exception:
-        log.warning(f"Failed to send message to slack.")
+        log.warning("Failed to send message to slack.")
