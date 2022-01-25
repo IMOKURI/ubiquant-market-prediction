@@ -36,7 +36,7 @@ class TimeSeriesAPI:
         time_id, df = next(self.df_iter)
         self.next_calls += 1
 
-        data_df = df.drop(columns=["time_id", "target"])
+        data_df = df  # .drop(columns=["time_id", "target"])
 
         target_df = df[["row_id", "target", "investment_id"]]
         self.targets.append(target_df)

@@ -61,6 +61,7 @@ params:
   n_fold: 7
   skip_training: false
   epoch: 30
+  es_patience: 0
   batch_size: 96
   gradient_acc_step: 1
   max_grad_norm: 1000
@@ -70,7 +71,7 @@ params:
   dataset: ump_1
   model: ump_1
   # model_name: swin_large_patch4_window12_384_in22k
-  # pretrained: []
+  pretrained: []
   # pretrained:
   #   - dir: ""
   #     model: ""
@@ -83,4 +84,4 @@ params:
   min_lr: 1e-6
   weight_decay: 1e-5
   label_smoothing: 1e-6
-  # scoring: rmse
+  scoring: pearson

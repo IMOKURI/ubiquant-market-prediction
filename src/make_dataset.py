@@ -25,16 +25,17 @@ def make_dataloader(c, ds, shuffle, drop_last):
 
 class BaseDataset(Dataset):
     def __init__(self, c, df, label=True):
-        self.df = df
-        self.features = df.drop(
-            ["row_id", "time_id", "investment_id", c.params.label_name, "fold"], axis=1).values
+        # self.df = df
+        self.features = df.drop(["row_id", "investment_id"], axis=1).values
 
         self.use_label = label
         if self.use_label:
             self.labels = df[c.params.label_name].values
+            self.features = self.features.drop(["time_id", c.params.label_name, "fold"], axis=1).values
 
     def __len__(self):
-        return len(self.df)
+        # return len(self.df)
+        return len(self.features)
 
     def __getitem__(self, idx):
         feature = torch.tensor(self.features[idx])
