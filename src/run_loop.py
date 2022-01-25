@@ -3,15 +3,18 @@ import os
 import time
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.cuda.amp as amp
 import wandb
 
-from .get_score import get_score
+from .utils import AverageMeter
+# from .get_score import get_score
 from .make_dataset import make_dataloader, make_dataset
 from .make_loss import make_criterion, make_optimizer, make_scheduler
 from .make_model import make_model
 from .run_epoch import train_epoch, validate_epoch, inference_epoch
+from .time_series_api import TimeSeriesAPI
 
 log = logging.getLogger(__name__)
 
@@ -29,10 +32,10 @@ def train_fold(c, df, fold, device):
     valid_folds = df.loc[val_idx].reset_index(drop=True)
 
     train_ds = make_dataset(c, train_folds)
-    valid_ds = make_dataset(c, valid_folds)
+    # valid_ds = make_dataset(c, valid_folds)
 
-    train_loader = make_dataloader(c, train_ds, shuffle=True, drop_last=True)
-    valid_loader = make_dataloader(c, valid_ds, shuffle=False, drop_last=False)
+    # train_loader = make_dataloader(c, train_ds, shuffle=True, drop_last=True)
+    # valid_loader = make_dataloader(c, valid_ds, shuffle=False, drop_last=False)
 
     # ====================================================
     # Model
@@ -52,60 +55,86 @@ def train_fold(c, df, fold, device):
     for epoch in range(c.params.epoch):
         start_time = time.time()
 
-        # train
-        if c.params.skip_training:
-            avg_loss = 0
-        else:
-            avg_loss = train_epoch(
-                c,
-                train_loader,
-                model,
-                criterion,
-                optimizer,
-                scheduler,
-                scaler,
-                epoch,
-                device,
-            )
+        # ====================================================
+        # Training
+        # ====================================================
+        iter_train = TimeSeriesAPI(train_folds)
+        avg_train_loss = AverageMeter()
 
-        # eval
-        avg_val_loss, preds = validate_epoch(
-            c, valid_loader, model, criterion, device)
-        valid_labels = valid_folds[c.params.label_name].values
+        for train_df, train_pred_df in iter_train:
+            train_ds = make_dataset(c, train_df)
+            train_loader = make_dataloader(
+                c, train_ds, shuffle=True, drop_last=True)
 
-        if "LogitsLoss" in c.params.criterion:
-            preds = 1 / (1 + np.exp(-preds))
+            if c.params.skip_training:
+                train_loss = 0
+            else:
+                train_loss = train_epoch(
+                    c,
+                    train_loader,
+                    model,
+                    criterion,
+                    optimizer,
+                    scheduler,
+                    scaler,
+                    epoch,
+                    device,
+                )
+            avg_train_loss.update(train_loss, len(train_df))
+
+            iter_train.predict(train_pred_df)
+
+        # ====================================================
+        # Validation
+        # ====================================================
+        iter_valid = TimeSeriesAPI(valid_folds)
+        avg_val_loss = AverageMeter()
+
+        for valid_df, valid_pred_df in iter_valid:
+            valid_ds = make_dataset(c, valid_df)
+            valid_loader = make_dataloader(
+                c, valid_ds, shuffle=False, drop_last=False)
+
+            val_loss, preds = validate_epoch(
+                c, valid_loader, model, criterion, device)
+            avg_val_loss.update(val_loss, len(valid_df))
+
+            if "LogitsLoss" in c.params.criterion:
+                preds = 1 / (1 + np.exp(-preds))
+
+            valid_pred_df[c.params.label_name] = preds
+            iter_valid.predict(valid_pred_df)
 
         # scoring
-        if c.params.n_class == 1:
-            score, prob = get_score(c.params.scoring, valid_labels, preds)
+        # if c.params.n_class == 1:
+        #     score, prob = get_score(c.params.scoring, valid_labels, preds)
         # elif c.params.n_class > 1:
         #     score = get_score(c.params.scoring, valid_labels, preds.argmax(1))
-        else:
-            raise Exception("Invalid n_class.")
+        # else:
+        #     raise Exception("Invalid n_class.")
 
         elapsed = time.time() - start_time
         log.info(
             f"Epoch {epoch+1} - "
-            f"loss_train: {avg_loss:.4f} "
-            f"loss_val: {avg_val_loss:.4f} "
-            f"score: {score:.4f} "
-            f"prob: {prob:.4f} "
+            f"train_loss: {avg_train_loss.avg:.4f} "
+            f"valid_loss: {avg_val_loss.avg:.4f} "
+            f"score: {iter_valid.score.avg:.4f} "
+            f"prob: {np.mean(iter_valid.probs):.4f} "
             f"time: {elapsed:.0f}s"
         )
         if c.wandb.enabled:
             wandb.log(
                 {
                     "epoch": epoch + 1,
-                    f"loss/train_fold{fold}": avg_loss,
-                    f"loss/valid_fold{fold}": avg_val_loss,
-                    f"score/fold{fold}": score,
-                    f"prob/fold{fold}": prob,
+                    f"train_loss/fold{fold}": avg_train_loss.avg,
+                    f"valid_loss/fold{fold}": avg_val_loss.avg,
+                    f"score/fold{fold}": iter_valid.score.avg,
+                    f"prob/fold{fold}": np.mean(iter_valid.probs),
                 }
             )
 
-        # es(avg_val_loss, score, model, preds)
-        es(avg_val_loss, score, model, preds, train_ds)
+        es(avg_val_loss.avg, iter_valid.score.avg,
+           model, pd.concat(iter_valid.predictions))
 
         if es.early_stop:
             log.info("Early stopping")

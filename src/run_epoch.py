@@ -14,11 +14,11 @@ log = logging.getLogger(__name__)
 def train_epoch(
     c, train_loader, model, criterion, optimizer, scheduler, scaler, epoch, device
 ):
-    losses = AverageMeter()
-
     model.train()
-    start = time.time()
+    losses = AverageMeter()
     optimizer.zero_grad(set_to_none=True)
+
+    start = time.time()
 
     for step, (features, labels) in enumerate(train_loader):
         features = features.to(device)
@@ -75,9 +75,8 @@ def train_epoch(
 
 
 def validate_epoch(c, valid_loader, model, criterion, device):
-    losses = AverageMeter()
-
     model.eval()
+    losses = AverageMeter()
 
     size = len(valid_loader.dataset)
     preds = np.zeros((size, ))
