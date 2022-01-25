@@ -214,7 +214,8 @@ def teardown_wandb(c, run, loss):
     if c.wandb.enabled:
         wandb.summary["loss"] = loss
         artifact = wandb.Artifact(
-            c.params.model_name.replace("/", "-"), type="model")
+            # c.params.model_name.replace("/", "-"), type="model")
+            c.params.model.replace("/", "-"), type="model")
         artifact.add_dir(".")
         run.log_artifact(artifact)
         log.info(f"WandB recorded. name: {run.name}, id: {run.id}")
