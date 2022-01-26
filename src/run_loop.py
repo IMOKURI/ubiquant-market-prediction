@@ -152,35 +152,34 @@ def train_fold(c, df, fold, device):
     return valid_folds, es.best_score, es.best_loss
 
 
-def inference(c, df, device):
-    predictions = np.zeros(
-        (len(df), len(c.params.pretrained) * c.params.n_fold))
+def inference(c, df, device, models):
+    predictions = np.zeros((len(df), len(models)))
+        # (len(df), len(c.params.pretrained) * c.params.n_fold))
     n = 0
 
-    for training in c.params.pretrained:
+    for model in models:
         inference_ds = make_dataset(c, df, label=False)
         inference_loader = make_dataloader(
             c, inference_ds, shuffle=False, drop_last=False)
 
-        c.params.model = training.model
-        c.params.model_name = training.name
+        # c.params.model = training.model
 
-        for fold in range(c.params.n_fold):
-            start_time = time.time()
+        # for fold in range(c.params.n_fold):
+        # start_time = time.time()
 
-            model_path = os.path.join(training.dir, f"fold{fold}")
-            model = make_model(c, device, model_path)
+        # model_path = os.path.join(training.dir, f"fold{fold}")
+        # model = make_model(c, device, training.dir)
 
-            preds = inference_epoch(c, inference_loader, model, device)
+        preds = inference_epoch(c, inference_loader, model, device)
 
-            if "LogitsLoss" in c.params.criterion:
-                preds = 1 / (1 + np.exp(-preds))
+        if "LogitsLoss" in c.params.criterion:
+            preds = 1 / (1 + np.exp(-preds))
 
-            predictions[:, n] = preds
-            n += 1
+        predictions[:, n] = preds
+        n += 1
 
-            elapsed = time.time() - start_time
-            log.info(f"time: {elapsed:.0f}s")
+        # elapsed = time.time() - start_time
+        # log.info(f"time: {elapsed:.0f}s")
 
     df[c.params.label_name] = np.mean(predictions, axis=1)
 

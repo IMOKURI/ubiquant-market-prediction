@@ -144,10 +144,10 @@ def inference_epoch(c, inference_loader, model, device):
             raise Exception("Invalid n_class.")
 
         # end = time.time()
-        if step % c.settings.print_freq == 0 or step == (len(inference_loader) - 1):
-            log.info(
-                f"EVAL: [{step}/{len(inference_loader)}] "
-                f"Elapsed {timeSince(start, float(step + 1) / len(inference_loader)):s} "
-            )
+        # if step % c.settings.print_freq == 0 or step == (len(inference_loader) - 1):
+        #     log.info(
+        #         f"EVAL: [{step}/{len(inference_loader)}] "
+        #         f"Elapsed {timeSince(start, float(step + 1) / len(inference_loader)):s} "
+        #     )
 
     return preds

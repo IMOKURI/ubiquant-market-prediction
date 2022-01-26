@@ -40,8 +40,8 @@ class BaseDataset(Dataset):
         return len(self.features)
 
     def __getitem__(self, idx):
-        feature = torch.tensor(self.features[idx])
+        feature = torch.tensor(self.features[idx]).float()
         if self.use_label:
-            label = torch.tensor(self.labels[idx])
+            label = torch.tensor(self.labels[idx]).float()
             return feature, label
         return feature
