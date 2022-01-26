@@ -19,6 +19,8 @@ def make_criterion(c):
         criterion = nn.MSELoss()
     elif c.params.criterion == "RMSELoss":
         criterion = RMSELoss()
+    elif c.params.criterion == "CorrLoss":
+        criterion = CorrLoss()
     elif c.params.criterion == "LabelSmoothCrossEntropyLoss":
         criterion = LabelSmoothCrossEntropyLoss(
             smoothing=c.params.label_smoothing)
@@ -42,6 +44,36 @@ class RMSELoss(nn.Module):
     def forward(self, yhat, y):
         loss = torch.sqrt(self.mse(yhat, y) + self.eps)
         return loss
+
+
+class CorrLoss(nn.Module):
+    """
+    use 1 - correlational coefficience between the output of the network and the target as the loss
+    input (o, t):
+        o: Variable of size (batch_size, 1) output of the network
+        t: Variable of size (batch_size, 1) target value
+    output (corr):
+        corr: Variable of size (1)
+    """
+
+    def __init__(self):
+        super(CorrLoss, self).__init__()
+
+    def forward(self, o, t):
+        assert(o.size() == t.size())
+        # calcu z-score for o and t
+        o_m = o.mean(dim=0)
+        o_s = o.std(dim=0)
+        o_z = (o - o_m)/o_s
+
+        t_m = t.mean(dim=0)
+        t_s = t.std(dim=0)
+        t_z = (t - t_m)/t_s
+
+        # calcu corr between o and t
+        tmp = o_z * t_z
+        corr = tmp.mean(dim=0)
+        return 1 - corr
 
 
 # https://github.com/NingAnMe/Label-Smoothing-for-CrossEntropyLoss-PyTorch/blob/main/label_smothing_cross_entropy_loss.py

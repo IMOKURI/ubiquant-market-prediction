@@ -205,6 +205,7 @@ def setup_wandb(c):
             project=c.wandb.project,
             dir=os.path.abspath(c.wandb.dir),
             config=c_dict,
+            group=c.wandb.group,
         )
         log.info(f"WandB initialized. name: {run.name}, id: {run.id}")
         return run
