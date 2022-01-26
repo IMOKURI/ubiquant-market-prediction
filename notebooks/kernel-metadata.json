@@ -1,0 +1,20 @@
+{
+  "id": "imokuri/ump-inference",
+  "id_no": 24180730,
+  "title": "UMP - Inference",
+  "code_file": "ump-inference.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": false,
+  "keywords": [],
+  "dataset_sources": [
+    "speeddemon/hydracore105",
+    "imokuri/ump-models"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [
+    "c/ubiquant-market-prediction"
+  ]
+}

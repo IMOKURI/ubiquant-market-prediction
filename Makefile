@@ -25,6 +25,10 @@ debug: ## Run training debug mode
 
 build: clean-build ## Build package
 	@python encode.py ./src ./config
+	@cat ./build/build.py
+
+push: ## Push notebook
+	@cd ./notebooks/ && kaggle kernels push
 
 clean: clean-build clean-pyc clean-training ## Remove all build and python artifacts
 
