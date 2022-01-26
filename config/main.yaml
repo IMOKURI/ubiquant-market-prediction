@@ -78,7 +78,7 @@ params:
   #     model: ""
   #     name: ""
   # dropout: 0.0
-  criterion: CorrLoss
+  criterion: RMSELoss
   optimizer: Adam
   scheduler: CosineAnnealingWarmupRestarts
   lr: 1e-3
