@@ -46,18 +46,6 @@ class InputData:
             setattr(self, stem, df)
 
 
-
-class OofData:
-    def __init__(self, c, df):
-        self.c = c
-        self.df = df
-
-        for n, training in enumerate(c.params.pretrained):
-
-            oof_df = pd.read_csv(os.path.join(training.dir, "oof_df.csv"))
-            oof_df = oof_df[c.params.label_name]
-
-
 def sample_for_debug(c, df):
     if len(df) > c.settings.n_debug_data:
         df = df.sample(
