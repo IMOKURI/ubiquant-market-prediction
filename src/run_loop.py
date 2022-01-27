@@ -1,3 +1,4 @@
+import gc
 import logging
 import os
 import time
@@ -9,13 +10,14 @@ import torch.cuda.amp as amp
 import wandb
 from tqdm import tqdm
 
-from .utils import AverageMeter
+from .feature_store import Store
 # from .get_score import get_score
 from .make_dataset import make_dataloader, make_dataset
 from .make_loss import make_criterion, make_optimizer, make_scheduler
 from .make_model import make_model
 from .run_epoch import train_epoch, validate_epoch, inference_epoch
 from .time_series_api import TimeSeriesAPI
+from .utils import AverageMeter
 
 log = logging.getLogger(__name__)
 
@@ -59,10 +61,15 @@ def train_fold(c, df, fold, device):
         # ====================================================
         # Training
         # ====================================================
+        store = Store.empty()
         iter_train = TimeSeriesAPI(train_folds, scoring=False)
         avg_train_loss = AverageMeter()
 
         for train_df, train_pred_df in tqdm(iter_train):
+            gc.collect()
+            for _, row in train_df.iterrows():
+                store.append(row)
+
             train_ds = make_dataset(c, train_df)
             train_loader = make_dataloader(
                 c, train_ds, shuffle=True, drop_last=True)
@@ -88,10 +95,15 @@ def train_fold(c, df, fold, device):
         # ====================================================
         # Validation
         # ====================================================
+        store = Store.empty()
         iter_valid = TimeSeriesAPI(valid_folds)
         avg_val_loss = AverageMeter()
 
         for valid_df, valid_pred_df in tqdm(iter_valid):
+            gc.collect()
+            for _, row in valid_df.iterrows():
+                store.append(row)
+
             valid_ds = make_dataset(c, valid_df)
             valid_loader = make_dataloader(
                 c, valid_ds, shuffle=False, drop_last=False)
@@ -154,7 +166,7 @@ def train_fold(c, df, fold, device):
 
 def inference(c, df, device, models):
     predictions = np.zeros((len(df), len(models)))
-        # (len(df), len(c.params.pretrained) * c.params.n_fold))
+    # (len(df), len(c.params.pretrained) * c.params.n_fold))
     n = 0
 
     for model in models:

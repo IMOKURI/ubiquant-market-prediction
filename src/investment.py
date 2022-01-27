@@ -6,7 +6,7 @@ from .streamdf import StreamDf
 
 
 class Investment:
-    def __init__(self, row: pd.Seies, investment_id: int, features: StreamDf):
+    def __init__(self, row: pd.Series, investment_id: int, features: StreamDf):
         self.row = row
         self.investment_id = investment_id
         self.features = features

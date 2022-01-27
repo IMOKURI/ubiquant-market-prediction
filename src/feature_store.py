@@ -6,6 +6,7 @@ from .investment import Investments
 class Store:
     def __init__(self, investments: Investments):
         self.investments = investments
+        self.last_time_id = None
 
     @classmethod
     def empty(cls) -> 'Store':
@@ -15,3 +16,13 @@ class Store:
         investments = Investments(empty_feature)
 
         return cls(investments)
+
+    def append(self, row: pd.Series):
+        # TODO: row_id のパースに失敗したときのハンドリング
+        # last_time_id をうまく使えないだろうか
+        row['time_id'] = row['row_id'].split('_')[0]
+
+        # TODO: 最終的に catch_everything_in_kaggle をいれていく
+        self.investments.extend(row)
+
+        self.last_time_id = row["time_id"]
