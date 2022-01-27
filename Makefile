@@ -4,6 +4,8 @@
 NOW = $(shell date '+%Y%m%d-%H%M%S-%N')
 GROUP := $(shell date '+%Y%m%d-%H%M')
 
+LOCAL_KERNEL := "py37-all-in-one"
+
 
 train: ## Run training
 	@nohup python train.py +settings.run_fold=0 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
@@ -28,7 +30,10 @@ build: clean-build ## Build package
 	@cat ./build/build.py
 
 push: ## Push notebook
-	@cd ./notebooks/ && kaggle kernels push
+	@cd ./notebooks/ && \
+		jq '.metadata.kernelspec.name = "python3"' ./ump-inference.ipynb 1<> ./ump-inference.ipynb && \
+		kaggle kernels push && \
+		jq '.metadata.kernelspec.name = $(LOCAL_KERNEL)' ./ump-inference.ipynb 1<> ./ump-inference.ipynb
 
 clean: clean-build clean-pyc clean-training ## Remove all build and python artifacts
 
