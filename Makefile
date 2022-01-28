@@ -25,6 +25,9 @@ train: ## Run training
 debug: ## Run training debug mode
 	@python train.py settings.debug=True hydra.verbose=True +settings.run_fold=1
 
+benchmark: ## Benchmark some source
+	@python benchmark.py
+
 build: clean-build ## Build package
 	@python encode.py ./src ./config
 	@cat ./build/build.py

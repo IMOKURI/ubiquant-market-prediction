@@ -23,6 +23,14 @@ log = logging.getLogger(__name__)
 _ALWAYS_CATCH = False
 
 
+def basic_logger():
+    logging.basicConfig(
+        # filename=__file__.replace('.py', '.log'),
+        level=logging.getLevelName("INFO"),
+        format="%(asctime)s [%(levelname)s] [%(module)s] %(message)s",
+    )
+
+
 def set_always_catch(catch: bool):
     global _ALWAYS_CATCH
     _ALWAYS_CATCH = catch
@@ -175,6 +183,14 @@ def timeSince(since, percent):
     es = s / (percent)
     rs = es - s
     return "%s (remain %s)" % (asMinutes(s), asMinutes(rs))
+
+
+@contextmanager
+def timer(name):
+    s = time.time()
+    yield
+    elapsed = time.time() - s
+    log.info(f"[{name}] {asMinutes(elapsed)} ({elapsed:.3f}s)")
 
 
 def compute_grad_norm(parameters, norm_type=2.0):
