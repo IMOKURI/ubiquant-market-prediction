@@ -6,25 +6,27 @@ from .streamdf import StreamDf
 
 
 class Investment:
-    def __init__(self, row: pd.Series, investment_id: int, features: StreamDf):
+    def __init__(self, row: pd.Series, investment_id: int, features: StreamDf, targets: StreamDf):
         self.row = row
         self.investment_id = investment_id
         self.features = features
+        self.targets = targets
 
     @classmethod
     def empty(cls, row: pd.Series, investment_id):
         feature_schema = {'time_id': np.int32}
-
         feature_cols = [f"f_{n}" for n in range(300)]
         for col in feature_cols:
             feature_schema[col] = np.float32
-
         features = StreamDf.empty(feature_schema, 'time_id')
 
-        return Investment(row, investment_id, features)
+        target_schema = {'time_id': np.int32, 'target': np.float32}
+        targets = StreamDf.empty(target_schema, 'time_id')
+
+        return Investment(row, investment_id, features, targets)
 
     def last_n(self, n: int) -> 'Investment':
-        return Investment(self.row, self.investment_id, self.features.last_n(n))
+        return Investment(self.row, self.investment_id, self.features.last_n(n), self.targets.last_n(n))
 
 
 class Investments:
@@ -44,3 +46,7 @@ class Investments:
     def extend(self, row: pd.Series):
         self[row["investment_id"]].features.extend(
             row[self.feature_cols], row["time_id"])
+
+        if "target" in row.index:
+            self[row["investment_id"]].targets.extend(
+                row[["time_id", "target"]], row["time_id"])

@@ -6,6 +6,7 @@ import random
 import sys
 import time
 import traceback
+import warnings
 from contextlib import contextmanager
 from typing import Optional
 
@@ -46,8 +47,8 @@ def catch_everything_in_kaggle(name: Optional[str] = None):
         yield
     except Exception:
         msg = f"WARNINGS: exception occurred in {name or '(unknown)'}: {traceback.format_exc()}"
+        warnings.warn(msg)
         log.warning(msg)
-        print(msg)
 
         if in_kaggle() or _ALWAYS_CATCH:
             # ...catch and suppress if this is executed in kaggle
