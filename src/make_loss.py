@@ -19,8 +19,10 @@ def make_criterion(c):
         criterion = nn.MSELoss()
     elif c.params.criterion == "RMSELoss":
         criterion = RMSELoss()
-    elif c.params.criterion == "CorrLoss":
-        criterion = CorrLoss()
+    elif c.params.criterion == "PearsonCCLoss":
+        criterion = PearsonCCLoss()
+    elif c.params.criterion == "ConcordanceCCLoss":
+        criterion = ConcordanceCCLoss()
     elif c.params.criterion == "LabelSmoothCrossEntropyLoss":
         criterion = LabelSmoothCrossEntropyLoss(
             smoothing=c.params.label_smoothing)
@@ -41,39 +43,45 @@ class RMSELoss(nn.Module):
         self.mse = nn.MSELoss()
         self.eps = eps
 
-    def forward(self, yhat, y):
-        loss = torch.sqrt(self.mse(yhat, y) + self.eps)
+    def forward(self, inputs, targets):
+        loss = torch.sqrt(self.mse(inputs, targets) + self.eps)
         return loss
 
 
-class CorrLoss(nn.Module):
-    """
-    use 1 - correlational coefficience between the output of the network and the target as the loss
-    input (o, t):
-        o: Variable of size (batch_size, 1) output of the network
-        t: Variable of size (batch_size, 1) target value
-    output (corr):
-        corr: Variable of size (1)
-    """
+# https://discuss.pytorch.org/t/use-pearson-correlation-coefficient-as-cost-function/8739/9
+class PearsonCCLoss(nn.Module):
+    def __init__(self, eps=1e-8):
+        super().__init__()
+        self.cos = nn.CosineSimilarity(dim=1, eps=eps)
 
-    def __init__(self):
-        super(CorrLoss, self).__init__()
+    def forward(self, inputs, targets):
+        pcc = self.cos(inputs - inputs.mean(dim=1, keepdim=True),
+                       targets - targets.mean(dim=1, keepdim=True))
+        return 1.0 - pcc
 
-    def forward(self, o, t):
-        assert(o.size() == t.size())
-        # calcu z-score for o and t
-        o_m = o.mean(dim=0)
-        o_s = o.std(dim=0)
-        o_z = (o - o_m)/o_s
 
-        t_m = t.mean(dim=0)
-        t_s = t.std(dim=0)
-        t_z = (t - t_m)/t_s
+# https://discuss.pytorch.org/t/use-pearson-correlation-coefficient-as-cost-function/8739/8
+class ConcordanceCCLoss(nn.Module):
+    def __init__(self, eps=1e-8):
+        super().__init__()
+        self.cos = nn.CosineSimilarity(dim=1, eps=eps)
+        self.eps = eps
 
-        # calcu corr between o and t
-        tmp = o_z * t_z
-        corr = tmp.mean(dim=0)
-        return 1 - corr
+    def forward(self, inputs, targets):
+        inputs_mean = torch.mean(inputs)
+        targets_mean = torch.mean(targets)
+
+        inputs_var = torch.var(inputs)
+        targets_var = torch.var(targets)
+
+        inputs_std = torch.std(inputs)
+        targets_std = torch.std(targets)
+
+        pcc = self.cos(inputs - inputs.mean(dim=1, keepdim=True),
+                       targets - targets.mean(dim=1, keepdim=True))
+        ccc = (2 * pcc * inputs_std * targets_std) / (inputs_var +
+                                                      targets_var + (targets_mean - inputs_mean) ** 2 + self.eps)
+        return 1.0 - ccc
 
 
 # https://github.com/NingAnMe/Label-Smoothing-for-CrossEntropyLoss-PyTorch/blob/main/label_smothing_cross_entropy_loss.py
