@@ -15,7 +15,7 @@ def get_fingerprint(df):
         head = "train"
     h = hash(frozenset(pd.util.hash_pandas_object(df)))
     hash_value = f"{h:X}"[:6]
-    return f"{head}_{hash_value}_{df.loc[0, 'row_id']}_{df.loc[df.index[-1], 'row_id']}"
+    return f"{head}_{hash_value}_{df.loc[df.index[0], 'row_id']}_{df.loc[df.index[-1], 'row_id']}"
 
 
 def get_feature_path(base_dir: str, fingerprint: str, fname: str):
@@ -24,15 +24,15 @@ def get_feature_path(base_dir: str, fingerprint: str, fname: str):
 
 
 def make_feature(
-        base_df: pd.DataFrame,
-        store: Store,
-        feature_list: List[str] = [],
-        feature_store: str = "./features",
-        load_from_store: bool = True,
-        save_to_store: bool = True,
-        with_target: bool = False,
-        fallback_to_none: bool = True,
-        debug: bool = True,
+    base_df: pd.DataFrame,
+    store: Store,
+    feature_list: List[str] = [],
+    feature_store: str = "./features",
+    load_from_store: bool = True,
+    save_to_store: bool = True,
+    with_target: bool = False,
+    fallback_to_none: bool = True,
+    debug: bool = True,
 ):
     fingerprint = get_fingerprint(base_df)
 
@@ -66,19 +66,23 @@ def make_feature(
         if "f999_target" in feature_list_from_cache:
             del feature_list_from_cache["f999_target"]
 
-    log.info(f"features to calculate: {list(feature_list_to_calc.keys())}")
-    log.info(f"features from cache: {list(feature_list_from_cache.keys())}")
+    # log.info(f"features to calculate: {list(feature_list_to_calc.keys())}")
+    # log.info(f"features from cache: {list(feature_list_from_cache.keys())}")
 
     schema = get_feature_schema()
     feature_to_cols = {}
     dfs = []
 
+    # if "time_id" not in base_df.index:
+    #     # TODO: base_df_id のパースに失敗したときのハンドリング
+    #     base_df['time_id'] = base_df['row_id'].split('_')[0]
+
     if feature_list_to_calc:
         features = []
-        for i, row in base_df.iterrows():
+        for _, row in base_df.iterrows():
             feature = {}
-            time_id = row["time_id"]
-            investment = store.investments[row["investment_id"]].last_n(1)
+            # time_id = row["time_id"]
+            investment = store.investments[row["investment_id"]].last_n(2)
 
             ctx = Context(store, investment, fallback_to_none=fallback_to_none)
 

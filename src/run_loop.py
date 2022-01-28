@@ -14,6 +14,7 @@ from .feature_store import Store
 # from .get_score import get_score
 from .make_dataset import make_dataloader, make_dataset
 from .make_loss import make_criterion, make_optimizer, make_scheduler
+from .make_feature import make_feature
 from .make_model import make_model
 from .run_epoch import train_epoch, validate_epoch, inference_epoch
 from .time_series_api import TimeSeriesAPI
@@ -51,6 +52,7 @@ def train_fold(c, df, fold, device):
     scheduler = make_scheduler(c, optimizer, train_ds)
 
     es = EarlyStopping(c=c, fold=fold)
+    feature_store = os.path.join(c.settings.dirs.input, "features")
 
     # ====================================================
     # Loop
@@ -70,7 +72,10 @@ def train_fold(c, df, fold, device):
             for _, row in train_df.iterrows():
                 store.append(row)
 
-            train_ds = make_dataset(c, train_df)
+            pred_df = make_feature(
+                train_df, store, c.params.feature_set, feature_store, with_target=True)
+
+            train_ds = make_dataset(c, pred_df)
             train_loader = make_dataloader(
                 c, train_ds, shuffle=True, drop_last=True)
 
@@ -88,7 +93,7 @@ def train_fold(c, df, fold, device):
                     epoch,
                     device,
                 )
-            avg_train_loss.update(train_loss, len(train_df))
+            avg_train_loss.update(train_loss, len(pred_df))
 
             iter_train.predict(train_pred_df)
 
@@ -104,13 +109,16 @@ def train_fold(c, df, fold, device):
             for _, row in valid_df.iterrows():
                 store.append(row)
 
-            valid_ds = make_dataset(c, valid_df)
+            pred_df = make_feature(
+                valid_df, store, c.params.feature_set, feature_store, with_target=True)
+
+            valid_ds = make_dataset(c, pred_df)
             valid_loader = make_dataloader(
                 c, valid_ds, shuffle=False, drop_last=False)
 
             val_loss, preds = validate_epoch(
                 c, valid_loader, model, criterion, device)
-            avg_val_loss.update(val_loss, len(valid_df))
+            avg_val_loss.update(val_loss, len(pred_df))
 
             if "LogitsLoss" in c.params.criterion:
                 preds = 1 / (1 + np.exp(-preds))

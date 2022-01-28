@@ -93,6 +93,13 @@ def _prefix(feature_name: str) -> str:
     return feature_name.split("_")[0]
 
 
+@feature([f"f_{n}" for n in range(300)])
+def f000_initial_features(ctx: Context) -> Dict:
+    return {
+        f"f_{n}": ctx.investment.features[f"f_{n}"][-1] for n in range(300)
+    }
+
+
 @feature(["target"])
 def f999_target(ctx: Context) -> Dict:
     return {

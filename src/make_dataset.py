@@ -26,12 +26,13 @@ def make_dataloader(c, ds, shuffle, drop_last):
 class BaseDataset(Dataset):
     def __init__(self, c, df, label=True):
         # self.df = df
-        df = df.drop(["row_id", "investment_id"], axis=1)
+        # df = df.drop(["row_id", "investment_id"], axis=1)
 
         self.use_label = label
         if self.use_label:
             self.labels = df[c.params.label_name].values
-            df = df.drop(["time_id", c.params.label_name, "fold"], axis=1)
+            # df = df.drop(["time_id", c.params.label_name, "fold"], axis=1)
+            df = df.drop([c.params.label_name], axis=1)
 
         self.features = df.values
 
