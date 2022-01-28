@@ -18,9 +18,10 @@ class Store:
         return cls(investments)
 
     def append(self, row: pd.Series):
-        # TODO: row_id のパースに失敗したときのハンドリング
-        # last_time_id をうまく使えないだろうか
-        row['time_id'] = row['row_id'].split('_')[0]
+        if "time_id" not in row.index:
+            # TODO: row_id のパースに失敗したときのハンドリング
+            # last_time_id をうまく使えないだろうか
+            row['time_id'] = row['row_id'].split('_')[0]
 
         # TODO: 最終的に catch_everything_in_kaggle をいれていく
         self.investments.extend(row)

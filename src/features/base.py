@@ -1,3 +1,4 @@
+import copy
 import logging
 import traceback
 import warnings
@@ -11,7 +12,7 @@ from ..investment import Investment
 
 _ALL_FEATURES = {}  # type: Dict[str, Callable]
 _ALL_FEATURE_NAMES = set()
-_FEATURE_COLUMNS = {}  # type: Dict[str, List]
+_FEATURE_COLUMNS = {}  # type: Dict[str, List[str]]
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +74,10 @@ def get_feature(name: str) -> Callable:
     return _ALL_FEATURES[normalize_feature_name(name)]
 
 
+def get_feature_schema() -> Dict[str, List[str]]:
+    return copy.deepcopy(_FEATURE_COLUMNS)
+
+
 def normalize_feature_name(name: str) -> str:
     if name in _ALL_FEATURES:
         return name
@@ -86,3 +91,10 @@ def normalize_feature_name(name: str) -> str:
 
 def _prefix(feature_name: str) -> str:
     return feature_name.split("_")[0]
+
+
+@feature(["target"])
+def f999_target(ctx: Context) -> Dict:
+    return {
+        "target": ctx.investment.targets["target"][-1],
+    }
