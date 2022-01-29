@@ -34,7 +34,7 @@ class TimeSeriesAPI:
         return self
 
     def __len__(self):
-        return self.init_num_timeid - self.next_calls
+        return self.init_num_timeid  # - self.next_calls
 
     def __next__(self):
         assert self.pred_calls == self.next_calls, "You must call `predict()` before you get the next batch of data."

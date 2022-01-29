@@ -8,7 +8,6 @@ import pandas as pd
 import torch
 import torch.cuda.amp as amp
 import wandb
-from tqdm import tqdm
 
 from .feature_store import Store
 # from .get_score import get_score
@@ -18,7 +17,7 @@ from .make_feature import make_feature
 from .make_model import make_model
 from .run_epoch import train_epoch, validate_epoch, inference_epoch
 from .time_series_api import TimeSeriesAPI
-from .utils import AverageMeter
+from .utils import AverageMeter, timeSince
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +66,8 @@ def train_fold(c, df, fold, device):
         iter_train = TimeSeriesAPI(train_folds, scoring=False)
         avg_train_loss = AverageMeter()
 
-        for train_df, train_pred_df in tqdm(iter_train):
+        start = time.time()
+        for n, (train_df, train_pred_df) in enumerate(iter_train):
             gc.collect()
             for _, row in train_df.iterrows():
                 store.append(row)
@@ -97,6 +97,13 @@ def train_fold(c, df, fold, device):
 
             iter_train.predict(train_pred_df)
 
+            if n % c.settings.print_freq == 0 or n == (len(iter_train) - 1):
+                log.info(
+                    f"  Training: [{n}/{len(iter_train)}] "
+                    f"Elapsed {timeSince(start, float(n + 1) / len(iter_train)):s}, "
+                    f"Loss: {avg_train_loss.avg:4f}"
+                )
+
         # ====================================================
         # Validation
         # ====================================================
@@ -104,7 +111,8 @@ def train_fold(c, df, fold, device):
         iter_valid = TimeSeriesAPI(valid_folds)
         avg_val_loss = AverageMeter()
 
-        for valid_df, valid_pred_df in tqdm(iter_valid):
+        start = time.time()
+        for n, (valid_df, valid_pred_df) in enumerate(iter_valid):
             gc.collect()
             for _, row in valid_df.iterrows():
                 store.append(row)
@@ -125,6 +133,13 @@ def train_fold(c, df, fold, device):
 
             valid_pred_df[c.params.label_name] = preds
             iter_valid.predict(valid_pred_df)
+
+            if n % c.settings.print_freq == 0 or n == (len(iter_valid) - 1):
+                log.info(
+                    f"  Validation: [{n}/{len(iter_valid)}] "
+                    f"Elapsed {timeSince(start, float(n + 1) / len(iter_valid)):s}, "
+                    f"Loss: {avg_val_loss.avg:4f}"
+                )
 
         # scoring
         # if c.params.n_class == 1:
