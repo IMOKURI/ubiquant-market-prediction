@@ -26,8 +26,13 @@ def train_fold(c, df, fold, device):
     # ====================================================
     # Data Loader
     # ====================================================
-    trn_idx = df[df["fold"] != fold].index
-    val_idx = df[df["fold"] == fold].index
+    if c.params.fold == "time_series":
+        val_idx = df[df["fold"] == fold].index
+        trn_idx = df[df.index < val_idx.min()].index
+    else:
+        trn_idx = df[df["fold"] != fold].index
+        val_idx = df[df["fold"] == fold].index
+
     log.info(
         f"Num of training data: {len(trn_idx)}, num of validation data: {len(val_idx)}")
 

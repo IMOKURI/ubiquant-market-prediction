@@ -59,15 +59,15 @@ settings:
 params:
   seed: 440
   n_class: 1
-  n_fold: 7
+  n_fold: 5
   skip_training: false
   epoch: 20
   es_patience: 0
   batch_size: 640
   gradient_acc_step: 1
   max_grad_norm: 1000
-  fold: group
-  group_name: investment_id
+  fold: time_series
+  group_name: time_id
   label_name: target
   feature_set: ["f000"]
   dataset: ump_1

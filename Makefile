@@ -17,10 +17,10 @@ train: ## Run training
 	@nohup python train.py +settings.run_fold=3 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
 	sleep 2
 	@nohup python train.py +settings.run_fold=4 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
-	@nohup python train.py +settings.run_fold=5 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
-	@nohup python train.py +settings.run_fold=6 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=5 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=6 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
 
 debug: ## Run training debug mode
 	@python train.py settings.debug=True hydra.verbose=True +settings.run_fold=1
