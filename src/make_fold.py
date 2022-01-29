@@ -13,7 +13,9 @@ def make_fold(c, df):
     elif c.params.fold == "group":
         df = group_kfold(c, df, c.params.group_name)
     elif c.params.fold == "time_series":
-        df = moving_window_kfold(c, df, c.params.group_name)
+        df = moving_window_kfold(c, df, c.params.time_name)
+    elif c.params.fold == "time_series_group":
+        df = moving_window_group_kfold(c, df, c.params.group_name, c.params.time_name)
 
     else:
         raise Exception("Invalid fold.")
@@ -64,6 +66,18 @@ def moving_window_kfold(c, df, col):
     fold_ = MovingWindowKFold(col, clipping=False, n_splits=c.params.n_fold)
     for n, (_, val_index) in enumerate(fold_.split(df)):
         df.loc[df.index[val_index], "fold"] = int(n)
+
+    return df
+
+
+def moving_window_group_kfold(c, df, group_col, time_col):
+    fold_ = GroupKFold(n_splits=c.params.n_fold)
+    for n, (_, val_index) in enumerate(fold_.split(df, groups=df[group_col])):
+        df.loc[val_index, "group_fold"] = int(n)
+
+    fold_ = MovingWindowKFold(time_col, clipping=False, n_splits=c.params.n_fold)
+    for n, (_, val_index) in enumerate(fold_.split(df)):
+        df.loc[df.index[val_index], "time_fold"] = int(n)
 
     return df
 

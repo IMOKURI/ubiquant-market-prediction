@@ -29,6 +29,9 @@ def train_fold(c, df, fold, device):
     if c.params.fold == "time_series":
         val_idx = df[df["fold"] == fold].index
         trn_idx = df[df.index < val_idx.min()].index
+    elif c.params.fold == "time_series_group":
+        val_idx = df[df["time_fold"] == fold].index
+        trn_idx = df[(df.index < val_idx.min()) & (df["group_fold"] != fold)].index
     else:
         trn_idx = df[df["fold"] != fold].index
         val_idx = df[df["fold"] == fold].index

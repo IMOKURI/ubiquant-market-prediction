@@ -66,8 +66,9 @@ params:
   batch_size: 640
   gradient_acc_step: 1
   max_grad_norm: 1000
-  fold: time_series
-  group_name: time_id
+  fold: time_series_group
+  group_name: investment_id
+  time_name: time_id
   label_name: target
   feature_set: ["f000"]
   dataset: ump_1
