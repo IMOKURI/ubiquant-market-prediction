@@ -30,7 +30,7 @@ def train_fold(c, df, fold, device):
         val_idx = df[df["fold"] == fold].index
         trn_idx = df[df.index < val_idx.min()].index
     elif c.params.fold == "time_series_group":
-        val_idx = df[df["time_fold"] == c.params.n_fold].index  # Most recent data
+        val_idx = df[df["time_fold"] == c.params.n_fold - 1].index  # Most recent data
         trn_idx = df[(df.index < val_idx.min()) & (df["group_fold"] != fold)].index
     else:
         trn_idx = df[df["fold"] != fold].index
