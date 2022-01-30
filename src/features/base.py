@@ -9,7 +9,6 @@ from typing import Callable, Dict, List
 from ..feature_store import Store
 from ..investment import Investment
 
-
 _ALL_FEATURES = {}  # type: Dict[str, Callable]
 _ALL_FEATURE_NAMES = set()
 _FEATURE_COLUMNS = {}  # type: Dict[str, List[str]]
@@ -26,6 +25,7 @@ class Context:
 
 
 def feature(columns: List[str]):
+
     def _feature(func):
         _ALL_FEATURE_NAMES.add(func.__name__)
         _FEATURE_COLUMNS[func.__name__] = columns

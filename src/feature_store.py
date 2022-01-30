@@ -4,6 +4,7 @@ from .investment import Investments
 
 
 class Store:
+
     def __init__(self, investments: Investments):
         self.investments = investments
         self.last_time_id = None

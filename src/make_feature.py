@@ -1,10 +1,12 @@
 import logging
 import os
-import pandas as pd
 from typing import List
 
+import pandas as pd
+
 from .feature_store import Store
-from .features.base import Context, get_features, get_feature, get_feature_schema, normalize_feature_name
+from .features.base import (Context, get_feature, get_feature_schema,
+                            get_features, normalize_feature_name)
 
 log = logging.getLogger(__name__)
 
@@ -94,8 +96,7 @@ def make_feature(
                         assert c in schema_f, f"column schema mismatch, expected: {schema_f}, actual: {c}"
                     for c in schema_f:
                         assert (
-                            c in feature_to_cols[fname]
-                        ), f"column schema mismatch. {c} not found in generated feature"
+                            c in feature_to_cols[fname]), f"column schema mismatch. {c} not found in generated feature"
                     for c in result.keys():
                         assert c in feature_to_cols[fname], f"column schema inconsistent in feature {fname}"
 
