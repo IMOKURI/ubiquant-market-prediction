@@ -96,17 +96,15 @@ def df_stats(df):
     stats = []
     for col in df.columns:
         try:
-            stats.append(
-                (
-                    col,
-                    df[col].nunique(),
-                    df[col].value_counts().index[0],
-                    df[col].value_counts().values[0],
-                    df[col].value_counts(normalize=True, dropna=False).values[0] * 100,
-                    df[col].isnull().sum() * 100 / df.shape[0],
-                    df[col].dtype,
-                )
-            )
+            stats.append((
+                col,
+                df[col].nunique(),
+                df[col].value_counts().index[0],
+                df[col].value_counts().values[0],
+                df[col].value_counts(normalize=True, dropna=False).values[0] * 100,
+                df[col].isnull().sum() * 100 / df.shape[0],
+                df[col].dtype,
+            ))
         except TypeError:
             log.warning(f"Skip column. {col}: {df[col].dtype}")
     return pd.DataFrame(stats, columns=["カラム名", "ユニーク値数", "最頻値", "最頻値の出現回数", "最頻値の割合", "欠損値の割合", "タイプ"])
@@ -114,7 +112,7 @@ def df_stats(df):
 
 def reduce_mem_usage(df, verbose=True):
     numerics = ["int16", "int32", "int64", "float16", "float32", "float64"]
-    start_mem = df.memory_usage().sum() / 1024 ** 2
+    start_mem = df.memory_usage().sum() / 1024**2
     dfs = []
     for col in df.columns:
         col_type = df[col].dtypes
@@ -140,7 +138,7 @@ def reduce_mem_usage(df, verbose=True):
 
     df_out = pd.concat(dfs, axis=1)
     if verbose:
-        end_mem = df_out.memory_usage().sum() / 1024 ** 2
+        end_mem = df_out.memory_usage().sum() / 1024**2
         num_reduction = str(100 * (start_mem - end_mem) / start_mem)
         log.info(f"Mem. usage decreased to {str(end_mem)[:3]}Mb: {num_reduction[:2]}% reduction")
 

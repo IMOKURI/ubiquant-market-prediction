@@ -51,7 +51,10 @@ def main(c):
             break
 
     # oof_df.to_csv("oof_df.csv", index=False)
-    oof_df[["row_id", "time_id", "investment_id", "target", "preds", "fold"]].to_feather("oof_df.f")
+    if c.params.fold == "time_series_group":
+        oof_df[["row_id", "time_id", "investment_id", "target", "preds", "group_fold"]].to_feather("oof_df.f")
+    else:
+        oof_df[["row_id", "time_id", "investment_id", "target", "preds", "fold"]].to_feather("oof_df.f")
 
     log.info("========== final result ==========")
     score = record_result(c, oof_df, c.params.n_fold, losses.avg)

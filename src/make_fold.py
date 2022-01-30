@@ -2,7 +2,8 @@ import sys
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import GroupKFold, StratifiedKFold, TimeSeriesSplit
+from sklearn.model_selection import (GroupKFold, StratifiedKFold,
+                                     TimeSeriesSplit)
 
 
 def make_fold(c, df):
