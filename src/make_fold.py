@@ -27,9 +27,7 @@ def bins_stratified_kfold(c, df, col):
     num_bins = int(np.floor(1 + np.log2(len(df))))
     df.loc[:, "bins"] = pd.cut(df[col], bins=num_bins, labels=False)
 
-    fold_ = StratifiedKFold(
-        n_splits=c.params.n_fold, shuffle=True, random_state=c.params.seed
-    )
+    fold_ = StratifiedKFold(n_splits=c.params.n_fold, shuffle=True, random_state=c.params.seed)
     for n, (_, val_index) in enumerate(fold_.split(df, df["bins"])):
         df.loc[val_index, "fold"] = int(n)
 
@@ -37,9 +35,7 @@ def bins_stratified_kfold(c, df, col):
 
 
 def stratified_kfold(c, df, col):
-    fold_ = StratifiedKFold(
-        n_splits=c.params.n_fold, shuffle=True, random_state=c.params.seed
-    )
+    fold_ = StratifiedKFold(n_splits=c.params.n_fold, shuffle=True, random_state=c.params.seed)
     for n, (_, val_index) in enumerate(fold_.split(df, df[col])):
         df.loc[val_index, "fold"] = int(n)
 
@@ -114,9 +110,7 @@ class MovingWindowKFold(TimeSeriesSplit):
 
             if self.clipping:
                 # TimeSeriesSplit.split() で返される Fold の大きさが徐々に大きくなることを仮定している
-                train_fold_min_len = min(
-                    train_fold_min_len, len(train_iloc_index))
-                test_fold_min_len = min(
-                    test_fold_min_len, len(test_iloc_index))
+                train_fold_min_len = min(train_fold_min_len, len(train_iloc_index))
+                test_fold_min_len = min(test_fold_min_len, len(test_iloc_index))
 
             yield list(train_iloc_index[-train_fold_min_len:]), list(test_iloc_index[-test_fold_min_len:])

@@ -20,8 +20,7 @@ def make_model(c, device=None, model_path=None):
     if device:
         model.to(device)
     if model_path is not None:
-        model.load_state_dict(torch.load(
-            os.path.join(model_path, "pytorch_model.bin")))
+        model.load_state_dict(torch.load(os.path.join(model_path, "pytorch_model.bin")))
     return model
 
 
@@ -49,9 +48,7 @@ class BaseModel(nn.Module):
 
         self.bn_1 = nn.BatchNorm1d(self.dim)
 
-        self.fcs = nn.ModuleList(
-            [nn.Linear(self.dim, self.dim) for _ in range(self.layers)]
-        )
+        self.fcs = nn.ModuleList([nn.Linear(self.dim, self.dim) for _ in range(self.layers)])
 
         self.head = nn.Linear(self.dim, 1)
 

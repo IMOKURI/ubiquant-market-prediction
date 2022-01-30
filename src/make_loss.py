@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.loss import _WeightedLoss
 from torch.optim import Adam, AdamW
-from torch.optim.lr_scheduler import (CosineAnnealingLR,
-                                      CosineAnnealingWarmRestarts)
+from torch.optim.lr_scheduler import CosineAnnealingLR, CosineAnnealingWarmRestarts
 
 
 # ====================================================
@@ -24,11 +23,9 @@ def make_criterion(c):
     elif c.params.criterion == "ConcordanceCCLoss":
         criterion = ConcordanceCCLoss()
     elif c.params.criterion == "LabelSmoothCrossEntropyLoss":
-        criterion = LabelSmoothCrossEntropyLoss(
-            smoothing=c.params.label_smoothing)
+        criterion = LabelSmoothCrossEntropyLoss(smoothing=c.params.label_smoothing)
     elif c.params.criterion == "LabelSmoothBCEWithLogitsLoss":
-        criterion = LabelSmoothBCEWithLogitsLoss(
-            smoothing=c.params.label_smoothing)
+        criterion = LabelSmoothBCEWithLogitsLoss(smoothing=c.params.label_smoothing)
     elif c.params.criterion == "MarginRankingLoss":
         criterion = nn.MarginRankingLoss(margin=c.params.margin)
 
@@ -55,8 +52,7 @@ class PearsonCCLoss(nn.Module):
         self.cos = nn.CosineSimilarity(dim=1, eps=eps)
 
     def forward(self, inputs, targets):
-        pcc = self.cos(inputs - inputs.mean(dim=1, keepdim=True),
-                       targets - targets.mean(dim=1, keepdim=True))
+        pcc = self.cos(inputs - inputs.mean(dim=1, keepdim=True), targets - targets.mean(dim=1, keepdim=True))
         return 1.0 - pcc
 
 
@@ -77,10 +73,10 @@ class ConcordanceCCLoss(nn.Module):
         inputs_std = torch.std(inputs)
         targets_std = torch.std(targets)
 
-        pcc = self.cos(inputs - inputs.mean(dim=1, keepdim=True),
-                       targets - targets.mean(dim=1, keepdim=True))
-        ccc = (2 * pcc * inputs_std * targets_std) / (inputs_var +
-                                                      targets_var + (targets_mean - inputs_mean) ** 2 + self.eps)
+        pcc = self.cos(inputs - inputs.mean(dim=1, keepdim=True), targets - targets.mean(dim=1, keepdim=True))
+        ccc = (2 * pcc * inputs_std * targets_std) / (
+            inputs_var + targets_var + (targets_mean - inputs_mean) ** 2 + self.eps
+        )
         return 1.0 - ccc
 
 
@@ -97,17 +93,14 @@ class LabelSmoothCrossEntropyLoss(_WeightedLoss):
         assert 0 <= smoothing < 1
         with torch.no_grad():
             targets = (
-                torch.empty(size=(targets.size(0), n_classes),
-                            device=targets.device)
+                torch.empty(size=(targets.size(0), n_classes), device=targets.device)
                 .fill_(smoothing / (n_classes - 1))
                 .scatter_(1, targets.data.unsqueeze(1), 1.0 - smoothing)
             )
         return targets
 
     def forward(self, inputs, targets):
-        targets = LabelSmoothCrossEntropyLoss._smooth_one_hot(
-            targets, inputs.size(-1), self.smoothing
-        )
+        targets = LabelSmoothCrossEntropyLoss._smooth_one_hot(targets, inputs.size(-1), self.smoothing)
         lsm = F.log_softmax(inputs, -1)
 
         if self.weight is not None:
@@ -155,13 +148,9 @@ class LabelSmoothBCEWithLogitsLoss(_WeightedLoss):
 # ====================================================
 def make_optimizer(c, model):
     if c.params.optimizer == "Adam":
-        optimizer = Adam(
-            model.parameters(), lr=c.params.lr, weight_decay=c.params.weight_decay
-        )
+        optimizer = Adam(model.parameters(), lr=c.params.lr, weight_decay=c.params.weight_decay)
     elif c.params.optimizer == "AdamW":
-        optimizer = AdamW(
-            model.parameters(), lr=c.params.lr, weight_decay=c.params.weight_decay
-        )
+        optimizer = AdamW(model.parameters(), lr=c.params.lr, weight_decay=c.params.weight_decay)
     else:
         raise Exception("Invalid optimizer.")
     return optimizer
@@ -172,21 +161,17 @@ def make_optimizer(c, model):
 # ====================================================
 def make_scheduler(c, optimizer, ds):
     num_data = len(ds)
-    num_steps = (
-        num_data // (c.params.batch_size *
-                     c.params.gradient_acc_step) * c.params.epoch + 5
-    )
+    num_steps = num_data // (c.params.batch_size * c.params.gradient_acc_step) * c.params.epoch + 5
 
     if c.params.scheduler == "CosineAnnealingWarmRestarts":
         scheduler = CosineAnnealingWarmRestarts(
             optimizer, T_0=num_steps, T_mult=1, eta_min=c.params.min_lr, last_epoch=-1
         )
     elif c.params.scheduler == "CosineAnnealingLR":
-        scheduler = CosineAnnealingLR(
-            optimizer, T_max=num_steps, eta_min=c.params.min_lr, last_epoch=-1
-        )
+        scheduler = CosineAnnealingLR(optimizer, T_max=num_steps, eta_min=c.params.min_lr, last_epoch=-1)
     elif c.params.scheduler == "CosineAnnealingWarmupRestarts":
         from cosine_annealing_warmup import CosineAnnealingWarmupRestarts
+
         scheduler = CosineAnnealingWarmupRestarts(
             optimizer,
             first_cycle_steps=num_steps,

@@ -37,25 +37,18 @@ def make_feature(
     fingerprint = get_fingerprint(base_df)
 
     if feature_list:
-        feature_dict = {normalize_feature_name(
-            k): get_feature(k) for k in feature_list}
+        feature_dict = {normalize_feature_name(k): get_feature(k) for k in feature_list}
     else:
         feature_dict = get_features()
 
     if with_target and "f999_target" not in feature_dict:
         feature_dict["f999_target"] = get_features()["f999_target"]
 
-    feature_paths = {
-        fname: get_feature_path(feature_store, fingerprint, fname) for fname in feature_dict
-    }
+    feature_paths = {fname: get_feature_path(feature_store, fingerprint, fname) for fname in feature_dict}
 
     if load_from_store:
-        feature_list_to_calc = {
-            k: v for k, v in feature_dict.items() if not os.path.exists(feature_paths[k])
-        }
-        feature_list_from_cache = {
-            k: v for k, v in feature_dict.items() if k not in feature_list_to_calc
-        }
+        feature_list_to_calc = {k: v for k, v in feature_dict.items() if not os.path.exists(feature_paths[k])}
+        feature_list_from_cache = {k: v for k, v in feature_dict.items() if k not in feature_list_to_calc}
     else:
         feature_list_to_calc = feature_dict
         feature_list_from_cache = {}
@@ -100,7 +93,9 @@ def make_feature(
                         assert c in result, f"column schema inconsistent in feature {fname}"
                         assert c in schema_f, f"column schema mismatch, expected: {schema_f}, actual: {c}"
                     for c in schema_f:
-                        assert c in feature_to_cols[fname], f"column schema mismatch. {c} not found in generated feature"
+                        assert (
+                            c in feature_to_cols[fname]
+                        ), f"column schema mismatch. {c} not found in generated feature"
                     for c in result.keys():
                         assert c in feature_to_cols[fname], f"column schema inconsistent in feature {fname}"
 

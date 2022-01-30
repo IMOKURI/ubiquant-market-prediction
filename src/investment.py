@@ -14,18 +14,18 @@ class Investment:
 
     @classmethod
     def empty(cls, row: pd.Series, investment_id):
-        feature_schema = {'time_id': np.int32}
+        feature_schema = {"time_id": np.int32}
         feature_cols = [f"f_{n}" for n in range(300)]
         for col in feature_cols:
             feature_schema[col] = np.float32
-        features = StreamDf.empty(feature_schema, 'time_id')
+        features = StreamDf.empty(feature_schema, "time_id")
 
-        target_schema = {'time_id': np.int32, 'target': np.float32}
-        targets = StreamDf.empty(target_schema, 'time_id')
+        target_schema = {"time_id": np.int32, "target": np.float32}
+        targets = StreamDf.empty(target_schema, "time_id")
 
         return Investment(row, investment_id, features, targets)
 
-    def last_n(self, n: int) -> 'Investment':
+    def last_n(self, n: int) -> "Investment":
         return Investment(self.row, self.investment_id, self.features.last_n(n), self.targets.last_n(n))
 
 
@@ -39,14 +39,12 @@ class Investments:
         if investment_id not in self.investments:
             self.investments[investment_id] = Investment.empty(
                 self.investment_df.loc[investment_id] if investment_id in self.investment_df.index else None,
-                investment_id
+                investment_id,
             )
         return self.investments[investment_id]
 
     def extend(self, row: pd.Series):
-        self[row["investment_id"]].features.extend(
-            row[self.feature_cols], row["time_id"])
+        self[row["investment_id"]].features.extend(row[self.feature_cols], row["time_id"])
 
         if "target" in row.index:
-            self[row["investment_id"]].targets.extend(
-                row[["time_id", "target"]], row["time_id"])
+            self[row["investment_id"]].targets.extend(row[["time_id", "target"]], row["time_id"])

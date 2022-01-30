@@ -40,4 +40,3 @@ def record_result(c, df, fold, loss=None):
             wandb.log({"loss": loss, "fold": fold})
 
     return score
-

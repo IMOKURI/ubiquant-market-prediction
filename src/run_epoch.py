@@ -11,9 +11,7 @@ from .utils import AverageMeter, compute_grad_norm, timeSince
 log = logging.getLogger(__name__)
 
 
-def train_epoch(
-    c, train_loader, model, criterion, optimizer, scheduler, scaler, epoch, device
-):
+def train_epoch(c, train_loader, model, criterion, optimizer, scheduler, scaler, epoch, device):
     model.train()
     losses = AverageMeter()
     optimizer.zero_grad(set_to_none=True)
@@ -80,7 +78,7 @@ def validate_epoch(c, valid_loader, model, criterion, device):
     losses = AverageMeter()
 
     size = len(valid_loader.dataset)
-    preds = np.zeros((size, ))
+    preds = np.zeros((size,))
     # start = time.time()
 
     for step, (features, labels) in enumerate(valid_loader):

@@ -48,15 +48,15 @@ class TimeSeriesAPI:
         self.targets.append(target_df)
 
         pred_df = target_df.drop(columns=["investment_id"])
-        pred_df["target"] = 0.
+        pred_df["target"] = 0.0
 
         return data_df, pred_df
 
     def predict(self, pred_df):
         assert self.pred_calls == self.next_calls - 1, "You must get the next batch before making a new prediction."
-        assert pred_df.columns.to_list() == ['row_id', 'target'], "Prediction dataframe have invalid columns."
+        assert pred_df.columns.to_list() == ["row_id", "target"], "Prediction dataframe have invalid columns."
 
-        pred_df = pred_df.astype({'row_id': np.dtype('str'), 'target': np.dtype('float64')})
+        pred_df = pred_df.astype({"row_id": np.dtype("str"), "target": np.dtype("float64")})
         self.predictions.append(pred_df)
         self.pred_calls += 1
 

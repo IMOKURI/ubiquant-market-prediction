@@ -10,6 +10,7 @@ import torch.cuda.amp as amp
 import wandb
 
 from .feature_store import Store
+
 # from .get_score import get_score
 from .make_dataset import make_dataloader, make_dataset
 from .make_loss import make_criterion, make_optimizer, make_scheduler
@@ -36,8 +37,7 @@ def train_fold(c, df, fold, device):
         trn_idx = df[df["fold"] != fold].index
         val_idx = df[df["fold"] == fold].index
 
-    log.info(
-        f"Num of training data: {len(trn_idx)}, num of validation data: {len(val_idx)}")
+    log.info(f"Num of training data: {len(trn_idx)}, num of validation data: {len(val_idx)}")
 
     train_folds = df.loc[trn_idx].reset_index(drop=True)
     valid_folds = df.loc[val_idx].reset_index(drop=True)
@@ -80,12 +80,10 @@ def train_fold(c, df, fold, device):
             for _, row in train_df.iterrows():
                 store.append(row)
 
-            pred_df = make_feature(
-                train_df, store, c.params.feature_set, feature_store, with_target=True)
+            pred_df = make_feature(train_df, store, c.params.feature_set, feature_store, with_target=True)
 
             train_ds = make_dataset(c, pred_df)
-            train_loader = make_dataloader(
-                c, train_ds, shuffle=True, drop_last=True)
+            train_loader = make_dataloader(c, train_ds, shuffle=True, drop_last=True)
 
             if c.params.skip_training:
                 train_loss = 0
@@ -125,15 +123,12 @@ def train_fold(c, df, fold, device):
             for _, row in valid_df.iterrows():
                 store.append(row)
 
-            pred_df = make_feature(
-                valid_df, store, c.params.feature_set, feature_store, with_target=True)
+            pred_df = make_feature(valid_df, store, c.params.feature_set, feature_store, with_target=True)
 
             valid_ds = make_dataset(c, pred_df)
-            valid_loader = make_dataloader(
-                c, valid_ds, shuffle=False, drop_last=False)
+            valid_loader = make_dataloader(c, valid_ds, shuffle=False, drop_last=False)
 
-            val_loss, preds = validate_epoch(
-                c, valid_loader, model, criterion, device)
+            val_loss, preds = validate_epoch(c, valid_loader, model, criterion, device)
             avg_val_loss.update(val_loss, len(pred_df))
 
             if "LogitsLoss" in c.params.criterion:
@@ -177,8 +172,7 @@ def train_fold(c, df, fold, device):
                 }
             )
 
-        es(avg_val_loss.avg, iter_valid.score.avg,
-           model, pd.concat(iter_valid.predictions)["target"].values)
+        es(avg_val_loss.avg, iter_valid.score.avg, model, pd.concat(iter_valid.predictions)["target"].values)
 
         if es.early_stop:
             log.info("Early stopping")
@@ -202,8 +196,7 @@ def inference(c, df, device, models):
 
     for model in models:
         inference_ds = make_dataset(c, df, label=False)
-        inference_loader = make_dataloader(
-            c, inference_ds, shuffle=False, drop_last=False)
+        inference_loader = make_dataloader(c, inference_ds, shuffle=False, drop_last=False)
 
         # c.params.model = training.model
 
@@ -257,8 +250,7 @@ class EarlyStopping:
             if self.patience <= 0:
                 return
             self.counter += 1
-            log.info(
-                f"EarlyStopping counter: {self.counter} out of {self.patience}")
+            log.info(f"EarlyStopping counter: {self.counter} out of {self.patience}")
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -269,8 +261,6 @@ class EarlyStopping:
 
     def save_checkpoint(self, val_loss, model, ds):
         """Saves model when validation loss decrease."""
-        log.info(
-            f"Validation loss decreased ({self.best_loss:.6f} --> {val_loss:.6f}). Saving model ..."
-        )
+        log.info(f"Validation loss decreased ({self.best_loss:.6f} --> {val_loss:.6f}). Saving model ...")
         self.best_loss = val_loss
         torch.save(model.state_dict(), os.path.join(self.dir, self.path))

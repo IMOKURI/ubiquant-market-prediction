@@ -31,10 +31,8 @@ def feature(columns: List[str]):
         _FEATURE_COLUMNS[func.__name__] = columns
 
         prefix = _prefix(func.__name__)
-        features_with_same_prefix = [
-            f for f in _ALL_FEATURE_NAMES if _prefix(f) == prefix]
-        assert len(
-            features_with_same_prefix) == 1, f"feature prefix is duplicated! {features_with_same_prefix}"
+        features_with_same_prefix = [f for f in _ALL_FEATURE_NAMES if _prefix(f) == prefix]
+        assert len(features_with_same_prefix) == 1, f"feature prefix is duplicated! {features_with_same_prefix}"
 
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -95,9 +93,7 @@ def _prefix(feature_name: str) -> str:
 
 @feature([f"f_{n}" for n in range(300)])
 def f000_initial_features(ctx: Context) -> Dict:
-    return {
-        f"f_{n}": ctx.investment.features[f"f_{n}"][-1] for n in range(300)
-    }
+    return {f"f_{n}": ctx.investment.features[f"f_{n}"][-1] for n in range(300)}
 
 
 @feature(["target"])

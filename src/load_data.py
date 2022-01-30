@@ -4,6 +4,7 @@ import os
 import pandas as pd
 
 from .utils import reduce_mem_usage
+
 # from .make_features import create_features, select_features
 from .make_fold import make_fold
 
@@ -48,7 +49,5 @@ class InputData:
 
 def sample_for_debug(c, df):
     if len(df) > c.settings.n_debug_data:
-        df = df.sample(
-            n=c.settings.n_debug_data, random_state=c.params.seed
-        ).reset_index(drop=True)
+        df = df.sample(n=c.settings.n_debug_data, random_state=c.params.seed).reset_index(drop=True)
     return df

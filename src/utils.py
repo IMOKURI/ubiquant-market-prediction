@@ -38,7 +38,7 @@ def set_always_catch(catch: bool):
 
 
 def in_kaggle() -> bool:
-    return 'kaggle_web_client' in sys.modules
+    return "kaggle_web_client" in sys.modules
 
 
 @contextmanager
@@ -88,8 +88,7 @@ def gpu_settings(c):
         pass
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    log.info(
-        f"torch device: {device}, device count: {torch.cuda.device_count()}")
+    log.info(f"torch device: {device}, device count: {torch.cuda.device_count()}")
     return device
 
 
@@ -103,18 +102,14 @@ def df_stats(df):
                     df[col].nunique(),
                     df[col].value_counts().index[0],
                     df[col].value_counts().values[0],
-                    df[col].value_counts(
-                        normalize=True, dropna=False).values[0] * 100,
+                    df[col].value_counts(normalize=True, dropna=False).values[0] * 100,
                     df[col].isnull().sum() * 100 / df.shape[0],
                     df[col].dtype,
                 )
             )
         except TypeError:
             log.warning(f"Skip column. {col}: {df[col].dtype}")
-    return pd.DataFrame(
-        stats, columns=["カラム名", "ユニーク値数", "最頻値",
-                        "最頻値の出現回数", "最頻値の割合", "欠損値の割合", "タイプ"]
-    )
+    return pd.DataFrame(stats, columns=["カラム名", "ユニーク値数", "最頻値", "最頻値の出現回数", "最頻値の割合", "欠損値の割合", "タイプ"])
 
 
 def reduce_mem_usage(df, verbose=True):
@@ -147,8 +142,7 @@ def reduce_mem_usage(df, verbose=True):
     if verbose:
         end_mem = df_out.memory_usage().sum() / 1024 ** 2
         num_reduction = str(100 * (start_mem - end_mem) / start_mem)
-        log.info(
-            f"Mem. usage decreased to {str(end_mem)[:3]}Mb: {num_reduction[:2]}% reduction")
+        log.info(f"Mem. usage decreased to {str(end_mem)[:3]}Mb: {num_reduction[:2]}% reduction")
 
     return df_out
 
@@ -202,10 +196,7 @@ def compute_grad_norm(parameters, norm_type=2.0):
     norm_type = float(norm_type)
     device = parameters[0].grad.device
     total_norm = torch.norm(
-        torch.stack(
-            [torch.norm(p.grad.detach(), norm_type).to(device)
-             for p in parameters]
-        ),
+        torch.stack([torch.norm(p.grad.detach(), norm_type).to(device) for p in parameters]),
         norm_type,
     )
 
@@ -233,7 +224,9 @@ def teardown_wandb(c, run, loss):
         wandb.summary["loss"] = loss
         artifact = wandb.Artifact(
             # c.params.model_name.replace("/", "-"), type="model")
-            c.params.model.replace("/", "-"), type="model")
+            c.params.model.replace("/", "-"),
+            type="model",
+        )
         artifact.add_dir(".")
         run.log_artifact(artifact)
         log.info(f"WandB recorded. name: {run.name}, id: {run.id}")

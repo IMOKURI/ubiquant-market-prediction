@@ -21,12 +21,15 @@ class StreamDf:
             When an exception occurs in extend, the specified value will be inserted instead.
             If None, default value will be inserted.
     """
-    def __init__(self,
-                 values: Dict[str, np.ndarray],
-                 length: int = None,
-                 primary_key_name: str = None,
-                 verbose: bool = True,
-                 default_value: Optional[Union[Dict[str, Any], Any]] = None):
+
+    def __init__(
+        self,
+        values: Dict[str, np.ndarray],
+        length: int = None,
+        primary_key_name: str = None,
+        verbose: bool = True,
+        default_value: Optional[Union[Dict[str, Any], Any]] = None,
+    ):
         self.columns = list(values.keys())
         self.primary_key_name = primary_key_name
 
@@ -39,17 +42,15 @@ class StreamDf:
     def __getitem__(self, item: Union[int, str, Tuple]):
         try:
             if isinstance(item, str):
-                return self._values[item][:self._len]  # type: np.ndarray
+                return self._values[item][: self._len]  # type: np.ndarray
             elif isinstance(item, np.ndarray):
                 # boolean indexer
-                return StreamDf({
-                    k: v[item] for k, v in self._values.items()
-                }, None)
+                return StreamDf({k: v[item] for k, v in self._values.items()}, None)
             else:
                 raise NotImplementedError()
         except KeyError:
             if self._verbose:
-                warnings.warn(f'Key not found: {item} (columns: {self.columns})')
+                warnings.warn(f"Key not found: {item} (columns: {self.columns})")
             raise
 
     def __len__(self):
@@ -75,40 +76,31 @@ class StreamDf:
         return self.primary_key
 
     @classmethod
-    def empty(cls,
-              column_schema: Dict[str, Type],
-              primary_key_name: str = None,
-              verbose: bool = True,
-              default_value: Optional[Union[Dict[str, Any], Any]] = None):
-        values = {
-            k: np.empty(0, dtype=v) for k, v in column_schema.items()
-        }
+    def empty(
+        cls,
+        column_schema: Dict[str, Type],
+        primary_key_name: str = None,
+        verbose: bool = True,
+        default_value: Optional[Union[Dict[str, Any], Any]] = None,
+    ):
+        values = {k: np.empty(0, dtype=v) for k, v in column_schema.items()}
         if primary_key_name is not None:
             assert primary_key_name in column_schema, "column_schema should contains primary_key_name"
 
         return cls(values, primary_key_name=primary_key_name, verbose=verbose, default_value=default_value)
 
     @classmethod
-    def from_pandas(cls,
-                    df: pd.DataFrame,
-                    columns=None):
+    def from_pandas(cls, df: pd.DataFrame, columns=None):
         columns = columns if columns is not None else df.columns
-        return cls({
-            c: df[c].values for c in columns
-        })
+        return cls({c: df[c].values for c in columns})
 
     def copy(self):
-        return StreamDf(
-            copy.deepcopy(self._values),
-            self._len
-        )
+        return StreamDf(copy.deepcopy(self._values), self._len)
 
     def set_index(self, primary_key_name: str):
         self.primary_key_name = primary_key_name
 
-    def masked(self,
-               mask: np.ndarray,
-               always_df: bool = False) -> Union['StreamDf', Dict]:
+    def masked(self, mask: np.ndarray, always_df: bool = False) -> Union["StreamDf", Dict]:
         if mask.sum() == 1 and not always_df:
             idx = np.where(mask)[0][0]
             values = {k: self._values[k][idx] for k in self.columns}
@@ -120,8 +112,7 @@ class StreamDf:
     def sliced(self, len: int):
         return StreamDf(self._values, length=min(len, self._len), primary_key_name=self.primary_key_name)
 
-    def extend(self,
-               df: Union['StreamDf', pd.Series, Dict], primary_key_value: Any = None):
+    def extend(self, df: Union["StreamDf", pd.Series, Dict], primary_key_value: Any = None):
         if isinstance(df, (dict, pd.Series)):
             self._extend_dict_like(df, primary_key_value)
         elif isinstance(df, StreamDf):
@@ -136,58 +127,52 @@ class StreamDf:
             self._grow(self._len + new_data_len)
 
         for c in self.columns:
-            self._values[c][self._len:self._len + new_data_len] = d[c]
+            self._values[c][self._len : self._len + new_data_len] = d[c]
 
         self._len += new_data_len
 
     def recent_n_days(self, n: int, base: np.datetime64):
         self._requires_index("recent_n_days")
-        th = base - np.timedelta64(n, 'D')
+        th = base - np.timedelta64(n, "D")
         return self.masked(self.primary_key >= th)
 
-    def slice_until(self, until: np.datetime64) -> 'StreamDf':
+    def slice_until(self, until: np.datetime64) -> "StreamDf":
         self._requires_index("slice_until")
         # ts <= untilまでのデータでスライスする.
-        index = np.searchsorted(self.primary_key, until, side='right')
+        index = np.searchsorted(self.primary_key, until, side="right")
         return StreamDf(self._values, index, self.primary_key_name)
 
-    def slice_from(self, from_: np.datetime64) -> 'StreamDf':
+    def slice_from(self, from_: np.datetime64) -> "StreamDf":
         self._requires_index("slice_from")
-        l = np.searchsorted(self.primary_key, from_, side='left')
+        l = np.searchsorted(self.primary_key, from_, side="left")
         if l >= self._len:
             return StreamDf(self._values, 0, self.primary_key_name)
-        values = {
-            k: v[l:self._len] for k, v in self._values.items()
-        }
+        values = {k: v[l : self._len] for k, v in self._values.items()}
         return StreamDf(values, primary_key_name=self.primary_key_name)
 
-    def last_n(self, n: int) -> 'StreamDf':
+    def last_n(self, n: int) -> "StreamDf":
         self._requires_index("last_n")
         n = min(n, len(self))
 
         if n == 0:
             return StreamDf(self._values, 0, self.primary_key_name)
 
-        values = {
-            k: v[self._len - n:self._len] for k, v in self._values.items()
-        }
+        values = {k: v[self._len - n : self._len] for k, v in self._values.items()}
         return StreamDf(values, primary_key_name=self.primary_key_name)
 
-    def slice_between(self, from_: np.datetime64, until: np.datetime64) -> 'StreamDf':
+    def slice_between(self, from_: np.datetime64, until: np.datetime64) -> "StreamDf":
         self._requires_index("slice_between")
         # from_ ~ untilまで（当日を含む）のデータにスライスする
-        r = np.searchsorted(self.primary_key, until, side='right')
+        r = np.searchsorted(self.primary_key, until, side="right")
         r = min(r, self._len)
-        l = np.searchsorted(self.primary_key, from_, side='left')
+        l = np.searchsorted(self.primary_key, from_, side="left")
 
         if l >= r:
             return StreamDf(self._values, 0, self.primary_key_name)
 
         assert l < r
 
-        values = {
-            k: v[l:r] for k, v in self._values.items()
-        }
+        values = {k: v[l:r] for k, v in self._values.items()}
         return StreamDf(values, primary_key_name=self.primary_key_name)
 
     def last_timestamp(self, n: int = -1):
@@ -249,10 +234,7 @@ class StreamDf:
         assert new_data_len > 0
 
         for k in self._values:
-            self._values[k] = np.concatenate([
-                self._values[k],
-                np.empty(new_data_len, dtype=self._values[k].dtype)
-            ])
+            self._values[k] = np.concatenate([self._values[k], np.empty(new_data_len, dtype=self._values[k].dtype)])
         self._capacity += new_data_len
 
     def _fallback_value(self, column: str):
@@ -281,12 +263,12 @@ class StreamDf:
                 self._values[c][self._len] = df[c]
             except (TypeError, ValueError, KeyError):
                 if self._verbose:
-                    warnings.warn(f'expected type: {self._values[c].dtype}, actual value: {df[c]} in column {c}')
+                    warnings.warn(f"expected type: {self._values[c].dtype}, actual value: {df[c]} in column {c}")
                 self._values[c][self._len] = self._fallback_value(c)
 
         self._len += 1
 
-    def _extend_df(self, df: 'StreamDf', primary_key_value: Any = None):
+    def _extend_df(self, df: "StreamDf", primary_key_value: Any = None):
         new_data_len = len(df)
         if new_data_len == 0:
             return
@@ -297,12 +279,12 @@ class StreamDf:
         for c in self.columns:
             assert c in df.columns
             try:
-                self._values[c][self._len:self._len + new_data_len] = df[c]
+                self._values[c][self._len : self._len + new_data_len] = df[c]
             except (TypeError, ValueError, KeyError):
-                self._values[c][self._len:self._len + new_data_len] = self._fallback_value(c)
+                self._values[c][self._len : self._len + new_data_len] = self._fallback_value(c)
 
         if self.primary_key_name is not None:
-            self._values[self.primary_key_name][self._len:self._len + new_data_len] = primary_key_value
+            self._values[self.primary_key_name][self._len : self._len + new_data_len] = primary_key_value
 
         self._len += new_data_len
 
