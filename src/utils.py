@@ -75,7 +75,7 @@ def debug_settings(c):
         log.info("Enable debug mode.")
         c.wandb.enabled = False
         c.settings.print_freq = 10
-        c.params.n_fold = 3
+        # c.params.n_fold = 3
         c.params.epoch = 1
 
 

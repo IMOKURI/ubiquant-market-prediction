@@ -51,7 +51,7 @@ def main(c):
             break
 
     # oof_df.to_csv("oof_df.csv", index=False)
-    if c.params.fold == "time_series_group":
+    if c.params.fold in ["time_series_group", "simple_cpcv"]:
         oof_df[["row_id", "time_id", "investment_id", "target", "preds", "group_fold"]].to_feather("oof_df.f")
     else:
         oof_df[["row_id", "time_id", "investment_id", "target", "preds", "fold"]].to_feather("oof_df.f")
