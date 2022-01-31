@@ -96,15 +96,17 @@ def df_stats(df):
     stats = []
     for col in df.columns:
         try:
-            stats.append((
-                col,
-                df[col].nunique(),
-                df[col].value_counts().index[0],
-                df[col].value_counts().values[0],
-                df[col].value_counts(normalize=True, dropna=False).values[0] * 100,
-                df[col].isnull().sum() * 100 / df.shape[0],
-                df[col].dtype,
-            ))
+            stats.append(
+                (
+                    col,
+                    df[col].nunique(),
+                    df[col].value_counts().index[0],
+                    df[col].value_counts().values[0],
+                    df[col].value_counts(normalize=True, dropna=False).values[0] * 100,
+                    df[col].isnull().sum() * 100 / df.shape[0],
+                    df[col].dtype,
+                )
+            )
         except TypeError:
             log.warning(f"Skip column. {col}: {df[col].dtype}")
     return pd.DataFrame(stats, columns=["カラム名", "ユニーク値数", "最頻値", "最頻値の出現回数", "最頻値の割合", "欠損値の割合", "タイプ"])

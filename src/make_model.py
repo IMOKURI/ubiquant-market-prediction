@@ -40,7 +40,6 @@ def swish(x):
 
 
 class BaseModel(nn.Module):
-
     def __init__(self, c, pretrained=True):
         super().__init__()
         self.amp = c.settings.amp

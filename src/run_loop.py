@@ -10,6 +10,7 @@ import torch.cuda.amp as amp
 import wandb
 
 from .feature_store import Store
+
 # from .get_score import get_score
 from .make_dataset import make_dataloader, make_dataset
 from .make_feature import make_feature
@@ -35,8 +36,10 @@ def train_fold(c, df, fold, device):
         trn_idx = df[(df.index < val_idx.min()) & (df["group_fold"] != fold)].index
     elif c.params.fold == "simple_cpcv":
         val_idx = df[df["time_fold"].isin(CPCV_INDEX_5FOLD["val_time_id"][fold])].index
-        trn_idx = df[(~df["time_fold"].isin(CPCV_INDEX_5FOLD["val_time_id"][fold]))
-                     & (df["group_fold"] != CPCV_INDEX_5FOLD["val_group_id"][fold])].index
+        trn_idx = df[
+            (~df["time_fold"].isin(CPCV_INDEX_5FOLD["val_time_id"][fold]))
+            & (df["group_fold"] != CPCV_INDEX_5FOLD["val_group_id"][fold])
+        ].index
     else:
         trn_idx = df[df["fold"] != fold].index
         val_idx = df[df["fold"] == fold].index
@@ -108,9 +111,11 @@ def train_fold(c, df, fold, device):
             iter_train.predict(train_pred_df)
 
             if n % c.settings.print_freq == 0 or n == (len(iter_train) - 1):
-                log.info(f"  Training: [{n}/{len(iter_train)}] "
-                         f"Elapsed {timeSince(start, float(n + 1) / len(iter_train)):s}, "
-                         f"Loss: {avg_train_loss.avg:4f}")
+                log.info(
+                    f"  Training: [{n}/{len(iter_train)}] "
+                    f"Elapsed {timeSince(start, float(n + 1) / len(iter_train)):s}, "
+                    f"Loss: {avg_train_loss.avg:4f}"
+                )
 
         # ====================================================
         # Validation
@@ -140,9 +145,11 @@ def train_fold(c, df, fold, device):
             iter_valid.predict(valid_pred_df)
 
             if n % c.settings.print_freq == 0 or n == (len(iter_valid) - 1):
-                log.info(f"  Validation: [{n}/{len(iter_valid)}] "
-                         f"Elapsed {timeSince(start, float(n + 1) / len(iter_valid)):s}, "
-                         f"Loss: {avg_val_loss.avg:4f}")
+                log.info(
+                    f"  Validation: [{n}/{len(iter_valid)}] "
+                    f"Elapsed {timeSince(start, float(n + 1) / len(iter_valid)):s}, "
+                    f"Loss: {avg_val_loss.avg:4f}"
+                )
 
         # scoring
         # if c.params.n_class == 1:
@@ -153,20 +160,24 @@ def train_fold(c, df, fold, device):
         #     raise Exception("Invalid n_class.")
 
         elapsed = time.time() - start_time
-        log.info(f"Epoch {epoch+1} - "
-                 f"train_loss: {avg_train_loss.avg:.4f} "
-                 f"valid_loss: {avg_val_loss.avg:.4f} "
-                 f"score: {iter_valid.score.avg:.4f} "
-                 f"prob: {np.mean(iter_valid.probs):.4f} "
-                 f"time: {elapsed:.0f}s")
+        log.info(
+            f"Epoch {epoch+1} - "
+            f"train_loss: {avg_train_loss.avg:.4f} "
+            f"valid_loss: {avg_val_loss.avg:.4f} "
+            f"score: {iter_valid.score.avg:.4f} "
+            f"prob: {np.mean(iter_valid.probs):.4f} "
+            f"time: {elapsed:.0f}s"
+        )
         if c.wandb.enabled:
-            wandb.log({
-                "epoch": epoch + 1,
-                f"train_loss/fold{fold}": avg_train_loss.avg,
-                f"valid_loss/fold{fold}": avg_val_loss.avg,
-                f"score/fold{fold}": iter_valid.score.avg,
-                f"prob/fold{fold}": np.mean(iter_valid.probs),
-            })
+            wandb.log(
+                {
+                    "epoch": epoch + 1,
+                    f"train_loss/fold{fold}": avg_train_loss.avg,
+                    f"valid_loss/fold{fold}": avg_val_loss.avg,
+                    f"score/fold{fold}": iter_valid.score.avg,
+                    f"prob/fold{fold}": np.mean(iter_valid.probs),
+                }
+            )
 
         es(avg_val_loss.avg, iter_valid.score.avg, model, pd.concat(iter_valid.predictions)["target"].values)
 

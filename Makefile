@@ -21,6 +21,22 @@ train: ## Run training
 	# @nohup python train.py +settings.run_fold=5 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
 	# sleep 2
 	# @nohup python train.py +settings.run_fold=6 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=7 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=8 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=9 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=10 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=11 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=12 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=13 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	# sleep 2
+	# @nohup python train.py +settings.run_fold=14 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
 
 debug: ## Run training debug mode
 	@python train.py settings.debug=True hydra.verbose=True +settings.run_fold=1

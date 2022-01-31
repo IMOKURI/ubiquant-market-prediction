@@ -25,7 +25,6 @@ class Context:
 
 
 def feature(columns: List[str]):
-
     def _feature(func):
         _ALL_FEATURE_NAMES.add(func.__name__)
         _FEATURE_COLUMNS[func.__name__] = columns

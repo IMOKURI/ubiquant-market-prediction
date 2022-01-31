@@ -38,16 +38,16 @@ def encode_file(path: Path) -> str:
 def build_script(modules: List[str]):
     all_data = {}
     for module in modules:
-        to_encode = list(Path(module).glob("**/*.py")) + \
-            list(Path(module).glob("**/*.yaml"))
-        file_data = {str(path).replace("\\", "/"): encode_file(path)
-                     for path in to_encode}
+        to_encode = list(Path(module).glob("**/*.py")) + list(Path(module).glob("**/*.yaml"))
+        file_data = {str(path).replace("\\", "/"): encode_file(path) for path in to_encode}
         all_data.update(file_data)
 
     output_path = Path("build/build.py")
     output_path.parent.mkdir(exist_ok=True)
-    output_path.write_text(template.replace("{file_data}", str(all_data)).replace(
-        "{commit_hash}", get_current_commit_hash()), encoding="utf8")
+    output_path.write_text(
+        template.replace("{file_data}", str(all_data)).replace("{commit_hash}", get_current_commit_hash()),
+        encoding="utf8",
+    )
 
 
 if __name__ == "__main__":
