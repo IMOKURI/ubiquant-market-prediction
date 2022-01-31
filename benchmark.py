@@ -2,6 +2,8 @@ import sys
 
 sys.path.append("../inputs")
 
+# isort: split
+
 import logging
 
 import pandas as pd
@@ -30,7 +32,6 @@ def bench():
                 store.append(row)
 
         iter_train.predict(sample_prediction_df)
-
 
     log.info("Test data")
     with utils.timer("store.empty"):
