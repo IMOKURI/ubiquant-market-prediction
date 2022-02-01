@@ -24,6 +24,25 @@ for path, encoded in file_data.items():
 print('{commit_hash}')
 """
 
+jupyter_template = """
+"import gzip\\n",
+"import base64\\n",
+"import os\\n",
+"from pathlib import Path\\n",
+"from typing import Dict\\n",
+"# this is base64 encoded source code\\n",
+"file_data: Dict = {file_data}\\n",
+"for path, encoded in file_data.items():\\n",
+"    path = Path(path)\\n",
+"    path.parent.mkdir(exist_ok=True)\\n",
+"    path.write_bytes(gzip.decompress(base64.b64decode(encoded)))\\n",
+"# output current commit hash\\n",
+"print('{commit_hash}')\\n",
+"""
+
+# Uncomment this line if you replace from jupyter notebook.
+template = jupyter_template
+
 
 def get_current_commit_hash():
     repo = git.Repo(search_parent_directories=True)
@@ -36,18 +55,24 @@ def encode_file(path: Path) -> str:
 
 
 def build_script(modules: List[str]):
+    global template
+
     all_data = {}
     for module in modules:
         to_encode = list(Path(module).glob("**/*.py")) + list(Path(module).glob("**/*.yaml"))
         file_data = {str(path).replace("\\", "/"): encode_file(path) for path in to_encode}
         all_data.update(file_data)
 
-    output_path = Path("build/build.py")
-    output_path.parent.mkdir(exist_ok=True)
-    output_path.write_text(
-        template.replace("{file_data}", str(all_data)).replace("{commit_hash}", get_current_commit_hash()),
-        encoding="utf8",
-    )
+    template = template.replace("{file_data}", str(all_data))
+    template = template.replace("{commit_hash}", get_current_commit_hash())
+
+    with open("./notebooks/Inference.ipynb") as f:
+        file_data = f.read()
+
+    file_data = file_data.replace('"##### INSERT SOURCE CODE HERE FOR SUBMISSION #####\\n",', template)
+
+    with open("./notebooks/ump-inference.ipynb", "w") as f:
+        f.write(file_data)
 
 
 if __name__ == "__main__":

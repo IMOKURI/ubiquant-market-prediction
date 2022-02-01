@@ -1,3 +1,4 @@
-build
-submission.csv
 *.f
+build
+notebooks/ump-inference.ipynb
+submission.csv
