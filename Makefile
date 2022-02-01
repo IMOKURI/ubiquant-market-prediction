@@ -49,7 +49,6 @@ push: clean-build ## Push notebook
 	@rm -f ./notebooks/ump-inference.ipynb
 	@python encode.py ./src ./config
 	@cd ./notebooks/ && \
-		jq -R 'fromjson? | .metadata.kernelspec.name = "python3"' ./ump-inference.ipynb 1<> ./ump-inference.ipynb && \
 		kaggle kernels push
 
 clean: clean-build clean-pyc clean-training ## Remove all build and python artifacts
