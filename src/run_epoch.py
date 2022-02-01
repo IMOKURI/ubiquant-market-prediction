@@ -120,7 +120,7 @@ def inference_epoch(c, inference_loader, model, device):
 
     size = len(inference_loader.dataset)
     preds = np.zeros((size,))
-    start = time.time()
+    # start = time.time()
 
     for step, features in enumerate(inference_loader):
         features = features.to(device)

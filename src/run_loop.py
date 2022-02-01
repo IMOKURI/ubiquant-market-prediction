@@ -66,7 +66,7 @@ def train_fold(c, df, fold, device):
     scheduler = make_scheduler(c, optimizer, train_ds)
 
     es = EarlyStopping(c=c, fold=fold)
-    feature_store = os.path.join(c.settings.dirs.input, "features")
+    # feature_store = os.path.join(c.settings.dirs.input, "features")
 
     # ====================================================
     # Loop
@@ -203,9 +203,8 @@ def train_fold(c, df, fold, device):
 def inference(c, df, device, models):
     predictions = np.zeros((len(df), len(models)))
     # (len(df), len(c.params.pretrained) * c.params.n_fold))
-    n = 0
 
-    for model in models:
+    for n, model in enumerate(models):
         inference_ds = make_dataset(c, df, label=False)
         inference_loader = make_dataloader(c, inference_ds, shuffle=False, drop_last=False)
 
@@ -223,7 +222,6 @@ def inference(c, df, device, models):
             preds = 1 / (1 + np.exp(-preds))
 
         predictions[:, n] = preds
-        n += 1
 
         # elapsed = time.time() - start_time
         # log.info(f"time: {elapsed:.0f}s")
