@@ -1,40 +1,13 @@
 .PHONY: help build train
 .DEFAULT_GOAL := help
+SHELL = /bin/bash
 
 NOW = $(shell date '+%Y%m%d-%H%M%S-%N')
 GROUP := $(shell date '+%Y%m%d-%H%M')
 
 
 train: ## Run training
-	@nohup python train.py +settings.run_fold=0 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	@sleep 2
-	@nohup python train.py +settings.run_fold=1 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	@sleep 2
-	@nohup python train.py +settings.run_fold=2 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	@sleep 2
-	@nohup python train.py +settings.run_fold=3 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	@sleep 2
-	@nohup python train.py +settings.run_fold=4 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	@sleep 2
-	@nohup python train.py +settings.run_fold=5 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	@sleep 2
-	@nohup python train.py +settings.run_fold=6 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	@sleep 2
-	@nohup python train.py +settings.run_fold=7 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# @sleep 2
-	# @nohup python train.py +settings.run_fold=8 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# @sleep 2
-	# @nohup python train.py +settings.run_fold=9 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# @sleep 2
-	# @nohup python train.py +settings.run_fold=10 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# @sleep 2
-	# @nohup python train.py +settings.run_fold=11 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# @sleep 2
-	# @nohup python train.py +settings.run_fold=12 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# @sleep 2
-	# @nohup python train.py +settings.run_fold=13 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# @sleep 2
-	# @nohup python train.py +settings.run_fold=14 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+	@for i in {0..7}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
 
 debug: ## Run training debug mode
 	@python train.py settings.debug=True hydra.verbose=True +settings.run_fold=1
