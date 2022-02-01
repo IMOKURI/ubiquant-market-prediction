@@ -7,7 +7,9 @@ GROUP := $(shell date '+%Y%m%d-%H%M')
 
 
 train: ## Run training
-	# @for i in {0..7}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
+	@for i in {0..7}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
+
+train2: ## Run training section 2
 	@for i in {8..14}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
 
 debug: ## Run training debug mode

@@ -72,7 +72,7 @@ params:
   label_name: target
   feature_set: ["f000"]
   dataset: ump_1
-  model: ump_1
+  model: ump_1dcnn
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []
   # pretrained:
