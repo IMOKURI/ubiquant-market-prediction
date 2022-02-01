@@ -7,33 +7,33 @@ GROUP := $(shell date '+%Y%m%d-%H%M')
 
 train: ## Run training
 	@nohup python train.py +settings.run_fold=0 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
+	@sleep 2
 	@nohup python train.py +settings.run_fold=1 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
+	@sleep 2
 	@nohup python train.py +settings.run_fold=2 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
+	@sleep 2
 	@nohup python train.py +settings.run_fold=3 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
+	@sleep 2
 	@nohup python train.py +settings.run_fold=4 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
+	@sleep 2
 	@nohup python train.py +settings.run_fold=5 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
+	@sleep 2
 	@nohup python train.py +settings.run_fold=6 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	sleep 2
+	@sleep 2
 	@nohup python train.py +settings.run_fold=7 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# sleep 2
+	# @sleep 2
 	# @nohup python train.py +settings.run_fold=8 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# sleep 2
+	# @sleep 2
 	# @nohup python train.py +settings.run_fold=9 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# sleep 2
+	# @sleep 2
 	# @nohup python train.py +settings.run_fold=10 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# sleep 2
+	# @sleep 2
 	# @nohup python train.py +settings.run_fold=11 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# sleep 2
+	# @sleep 2
 	# @nohup python train.py +settings.run_fold=12 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# sleep 2
+	# @sleep 2
 	# @nohup python train.py +settings.run_fold=13 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
-	# sleep 2
+	# @sleep 2
 	# @nohup python train.py +settings.run_fold=14 wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
 
 debug: ## Run training debug mode
@@ -46,9 +46,10 @@ benchmark: ## Benchmark some source
 	@python benchmark.py
 
 push: clean-build ## Push notebook
+	@rm -f ./notebooks/ump-inference.ipynb
 	@python encode.py ./src ./config
 	@cd ./notebooks/ && \
-		jq '.metadata.kernelspec.name = "python3"' ./ump-inference.ipynb 1<> ./ump-inference.ipynb && \
+		jq -R 'fromjson? | .metadata.kernelspec.name = "python3"' ./ump-inference.ipynb 1<> ./ump-inference.ipynb && \
 		kaggle kernels push
 
 clean: clean-build clean-pyc clean-training ## Remove all build and python artifacts
