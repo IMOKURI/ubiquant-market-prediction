@@ -18,6 +18,8 @@ class Store:
         return cls(investments)
 
     def append(self, row: pd.Series):
+        row.fillna(0.0, inplace=True)
+
         if "time_id" not in row.index:
             # TODO: row_id のパースに失敗したときのハンドリング
             # last_time_id をうまく使えないだろうか
