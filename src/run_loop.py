@@ -185,9 +185,6 @@ def train_fold(c, df, fold, device):
             log.info("Early stopping")
             break
 
-    if os.path.exists(os.path.join(c.settings.dirs.working, "abort-training.flag")):
-        os.remove(os.path.join(c.settings.dirs.working, "abort-training.flag"))
-
     if c.params.n_class == 1:
         valid_folds["preds"] = es.best_preds
     # elif c.params.n_class > 1:
