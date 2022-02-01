@@ -41,6 +41,9 @@ train: ## Run training
 debug: ## Run training debug mode
 	@python train.py settings.debug=True hydra.verbose=True +settings.run_fold=1
 
+early-stop: ## Abort training gracefully
+	@touch abort-training.flag
+
 benchmark: ## Benchmark some source
 	@python benchmark.py
 
@@ -70,7 +73,7 @@ clean-pyc: ## Remove python artifacts
 	@find . -name '__pycache__' -exec rm -fr {} +
 
 clean-training: ## Remove training artifacts
-	@rm -rf ../outputs ../multirun
+	@rm -rf ../outputs ../multirun abort-training.flag
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[38;2;98;209;150m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
