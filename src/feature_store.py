@@ -1,4 +1,7 @@
-import pandas as pd
+import numpy as np
+from typing import Any
+
+from nptyping import NDArray
 
 from .investment import Investments
 
@@ -6,26 +9,15 @@ from .investment import Investments
 class Store:
     def __init__(self, investments: Investments):
         self.investments = investments
-        self.last_time_id = None
 
     @classmethod
     def empty(cls) -> "Store":
-        feature_cols = ["time_id", "investment_id"] + [f"f_{n}" for n in range(300)]
-        empty_feature = pd.DataFrame(columns=feature_cols)
-
-        investments = Investments(empty_feature)
+        investments = Investments()
 
         return cls(investments)
 
-    def append(self, row: pd.Series):
-        row.fillna(0.0, inplace=True)
-
-        if "time_id" not in row.index:
-            # TODO: row_id のパースに失敗したときのハンドリング
-            # last_time_id をうまく使えないだろうか
-            row["time_id"] = row["row_id"].split("_")[0]
+    def append(self, row: NDArray[(Any,), Any]):
+        np.nan_to_num(row, copy=False)
 
         # TODO: 最終的に catch_everything_in_kaggle をいれていく
         self.investments.extend(row)
-
-        self.last_time_id = row["time_id"]

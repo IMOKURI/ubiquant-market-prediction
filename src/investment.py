@@ -1,50 +1,52 @@
 import numpy as np
-import pandas as pd
-from typing import Dict
+from typing import Dict, Any
 
-from .streamdf import StreamDf
+from nptyping import NDArray
+
+from .streampy import StreamPy
 
 
 class Investment:
-    def __init__(self, row: pd.Series, investment_id: int, features: StreamDf, targets: StreamDf):
-        self.row = row
+    def __init__(self, investment_id: int, features: StreamPy, targets: StreamPy):
         self.investment_id = investment_id
         self.features = features
         self.targets = targets
 
     @classmethod
-    def empty(cls, row: pd.Series, investment_id):
-        feature_schema = {"time_id": np.int32}
+    def empty(cls, investment_id: int, dtype: type = np.float32, default_value: float = 0.0):
         feature_cols = [f"f_{n}" for n in range(300)]
-        for col in feature_cols:
-            feature_schema[col] = np.float32
-        features = StreamDf.empty(feature_schema, "time_id")
+        features = StreamPy.empty(feature_cols, dtype, default_value)
 
-        target_schema = {"time_id": np.int32, "target": np.float32}
-        targets = StreamDf.empty(target_schema, "time_id")
+        target_cols = ["target"]
+        targets = StreamPy.empty(target_cols, dtype, default_value)
 
-        return Investment(row, investment_id, features, targets)
+        return Investment(investment_id, features, targets)
 
     def last_n(self, n: int) -> "Investment":
-        return Investment(self.row, self.investment_id, self.features.last_n(n), self.targets.last_n(n))
+        return Investment(self.investment_id, self.features.last_n(n), self.targets.last_n(n))
 
 
 class Investments:
-    def __init__(self, investment_df: pd.DataFrame):
-        self.investment_df = investment_df.set_index("investment_id")
+    def __init__(self):
         self.investments = {}  # type: Dict[int, Investment]
-        self.feature_cols = ["time_id"] + [f"f_{n}" for n in range(300)]
 
     def __getitem__(self, investment_id: int) -> Investment:
         if investment_id not in self.investments:
-            self.investments[investment_id] = Investment.empty(
-                self.investment_df.loc[investment_id] if investment_id in self.investment_df.index else None,
-                investment_id,
-            )
+            self.investments[investment_id] = Investment.empty(investment_id)
         return self.investments[investment_id]
 
-    def extend(self, row: pd.Series):
-        self[row["investment_id"]].features.extend(row[self.feature_cols], row["time_id"])
+    def extend(self, row: NDArray[(Any,), Any]):
+        """
+        Args:
+            row (NDArray[(Any, ), Any]): 以下のスキーマを期待している
+                Test data (302 col): row_id, investment_id, f_x, ...
+                Train data (304 col): row_id, time_id, investment_id, target, f_x, ...
+        """
+        row[0] = int(row[0].split("_")[0])
 
-        if "target" in row.index:
-            self[row["investment_id"]].targets.extend(row[["time_id", "target"]], row["time_id"])
+        if row.shape[0] == 302:
+            self[row[1]].features.extend(row[2:].reshape(1, -1))
+
+        else:
+            self[row[2]].features.extend(row[4:].reshape(1, -1))
+            self[row[2]].targets.extend(row[3:4].reshape(1, -1))

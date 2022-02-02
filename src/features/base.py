@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from functools import wraps
 from typing import Callable, Dict, List
 
+import numpy as np
+
 from ..feature_store import Store
 from ..investment import Investment
 
@@ -19,7 +21,7 @@ log = logging.getLogger(__name__)
 @dataclass
 class Context:
     store: Store
-    investment: Investment
+    investment_id: int
     current_feature_name: str = ""
     fallback_to_none: bool = False
 
@@ -92,11 +94,11 @@ def _prefix(feature_name: str) -> str:
 
 @feature([f"f_{n}" for n in range(300)])
 def f000_initial_features(ctx: Context) -> Dict:
-    return {f"f_{n}": ctx.investment.features[f"f_{n}"][-1] for n in range(300)}
+    return {f"f_{n}": v for n, v in enumerate(np.nditer(ctx.store.investments[ctx.investment_id].features.last_n(1)))}
 
 
 @feature(["target"])
 def f999_target(ctx: Context) -> Dict:
     return {
-        "target": ctx.investment.targets["target"][-1],
+        "target": ctx.store.investments[ctx.investment_id].targets.last_n(1)[0][0],
     }

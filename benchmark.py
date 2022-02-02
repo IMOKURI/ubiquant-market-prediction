@@ -17,21 +17,22 @@ log = logging.getLogger(__name__)
 
 
 def bench():
+    train = pd.read_feather("../inputs/train.f")
+    train = train[train["investment_id"] < 100]
+
     log.info("Training data")
     with utils.timer("store.empty"):
         store = Store.empty()
 
-    train = pd.read_feather("../inputs/train.f")
-    small_train = train[train["investment_id"] < 10]
+    log.info(f"Num of train data: {len(train)}")
+    iter_train = TimeSeriesAPI(train)
 
-    iter_train = TimeSeriesAPI(small_train[:20])
-
-    for train_df, sample_prediction_df in iter_train:
-        with utils.timer("store.append"):
-            for _, row in train_df.iterrows():
+    with utils.timer("store.append"):
+        for train_df, sample_prediction_df in iter_train:
+            for row in train_df.values:
                 store.append(row)
 
-        iter_train.predict(sample_prediction_df)
+            iter_train.predict(sample_prediction_df)
 
     log.info("Test data")
     with utils.timer("store.empty"):
@@ -40,12 +41,12 @@ def bench():
     env = ubiquant.make_env()
     iter_test = env.iter_test()
 
-    for test_df, sample_prediction_df in iter_test:
-        with utils.timer("store.append"):
-            for _, row in test_df.iterrows():
+    with utils.timer("store.append"):
+        for test_df, sample_prediction_df in iter_test:
+            for row in test_df.values:
                 store.append(row)
 
-        env.predict(sample_prediction_df)
+            env.predict(sample_prediction_df)
 
 
 if __name__ == "__main__":

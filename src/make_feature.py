@@ -12,8 +12,6 @@ log = logging.getLogger(__name__)
 
 def get_fingerprint(df):
     head = f"d{len(df)}"
-    if len(df) == 3141410:
-        head = "train"
     h = hash(frozenset(pd.util.hash_pandas_object(df)))
     hash_value = f"{h:X}"[:6]
     return f"{head}_{hash_value}_{df.loc[df.index[0], 'row_id']}_{df.loc[df.index[-1], 'row_id']}"
@@ -67,18 +65,17 @@ def make_feature(
     feature_to_cols = {}
     dfs = []
 
-    # if "time_id" not in base_df.index:
-    #     # TODO: base_df_id のパースに失敗したときのハンドリング
-    #     base_df['time_id'] = base_df['row_id'].split('_')[0]
-
     if feature_list_to_calc:
         features = []
-        for _, row in base_df.iterrows():
+        for row in base_df.values:
             feature = {}
-            # time_id = row["time_id"]
-            investment = store.investments[row["investment_id"]].last_n(2)
 
-            ctx = Context(store, investment, fallback_to_none=fallback_to_none)
+            if row.shape[0] == 302:
+                investment_id = row[1]
+            else:
+                investment_id = row[2]
+
+            ctx = Context(store, investment_id, fallback_to_none=fallback_to_none)
 
             for fname, func in feature_list_to_calc.items():
                 result = func(ctx)
@@ -104,7 +101,7 @@ def make_feature(
 
             features.append(feature)
 
-        features_df = pd.DataFrame(features)
+        features_df = pd.DataFrame(features, dtype="float32")
         dfs.append(features_df)
 
         if save_to_store:
