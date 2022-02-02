@@ -77,7 +77,7 @@ class StreamPy:
         self.length += n_row
 
     def last_n(self, n: int) -> np.ndarray:
-        return self.values[self.length - n:self.length]
+        return self.values[self.length - n : self.length]
 
     def _grow(self, min_capacity):
         capacity = max(int(1.5 * self.capacity), min_capacity)

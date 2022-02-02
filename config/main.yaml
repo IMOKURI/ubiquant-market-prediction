@@ -60,7 +60,7 @@ params:
   seed: 440
   n_class: 1
   n_fold: 5
-  skip_training: false
+  skip_training: False
   epoch: 20
   es_patience: 0
   batch_size: 640
@@ -70,6 +70,7 @@ params:
   group_name: investment_id
   time_name: time_id
   label_name: target
+  use_feature: False
   feature_set: ["f000"]
   dataset: ump_1
   model: ump_1dcnn

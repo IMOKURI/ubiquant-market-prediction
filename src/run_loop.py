@@ -66,7 +66,7 @@ def train_fold(c, df, fold, device):
     scheduler = make_scheduler(c, optimizer, train_ds)
 
     es = EarlyStopping(c=c, fold=fold)
-    # feature_store = os.path.join(c.settings.dirs.input, "features")
+    feature_store = os.path.join(c.settings.dirs.input, "features")
 
     # ====================================================
     # Loop
@@ -77,20 +77,24 @@ def train_fold(c, df, fold, device):
         # ====================================================
         # Training
         # ====================================================
-        # store = Store.empty()
+        store = Store.empty()
         iter_train = TimeSeriesAPI(train_folds, scoring=False)
         avg_train_loss = AverageMeter()
 
         start = time.time()
         for n, (train_df, train_pred_df) in enumerate(iter_train):
             gc.collect()
-            # for _, row in train_df.iterrows():
-            #     store.append(row)
 
-            # pred_df = make_feature(train_df, store, c.params.feature_set, feature_store, with_target=True)
+            if c.params.use_feature:
+                for row in train_df.values:
+                    store.append(row)
 
-            # train_ds = make_dataset(c, pred_df)
-            train_ds = make_dataset(c, train_df)
+                pred_df = make_feature(train_df, store, c.params.feature_set, feature_store, with_target=True)
+                train_ds = make_dataset(c, pred_df)
+
+            else:
+                train_ds = make_dataset(c, train_df)
+
             train_loader = make_dataloader(c, train_ds, shuffle=True, drop_last=True)
 
             if c.params.skip_training:
@@ -107,7 +111,6 @@ def train_fold(c, df, fold, device):
                     epoch,
                     device,
                 )
-            # avg_train_loss.update(train_loss, len(pred_df))
             avg_train_loss.update(train_loss, len(train_df))
 
             iter_train.predict(train_pred_df)
@@ -122,24 +125,26 @@ def train_fold(c, df, fold, device):
         # ====================================================
         # Validation
         # ====================================================
-        # store = Store.empty()
+        store = Store.empty()
         iter_valid = TimeSeriesAPI(valid_folds)
         avg_val_loss = AverageMeter()
 
         start = time.time()
         for n, (valid_df, valid_pred_df) in enumerate(iter_valid):
             gc.collect()
-            # for _, row in valid_df.iterrows():
-            #     store.append(row)
 
-            # pred_df = make_feature(valid_df, store, c.params.feature_set, feature_store, with_target=True)
+            if c.params.use_feature:
+                for row in valid_df.values:
+                    store.append(row)
 
-            # valid_ds = make_dataset(c, pred_df)
-            valid_ds = make_dataset(c, valid_df)
+                pred_df = make_feature(valid_df, store, c.params.feature_set, feature_store, with_target=True)
+                valid_ds = make_dataset(c, pred_df)
+            else:
+                valid_ds = make_dataset(c, valid_df)
+
             valid_loader = make_dataloader(c, valid_ds, shuffle=False, drop_last=False)
 
             val_loss, preds = validate_epoch(c, valid_loader, model, criterion, device)
-            # avg_val_loss.update(val_loss, len(pred_df))
             avg_val_loss.update(val_loss, len(valid_df))
 
             if "LogitsLoss" in c.params.criterion:
