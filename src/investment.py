@@ -40,13 +40,13 @@ class Investments:
         Args:
             row (NDArray[(Any, ), Any]): 以下のスキーマを期待している
                 Test data (302 col): row_id, investment_id, f_x, ...
-                Train data (304 col): row_id, time_id, investment_id, target, f_x, ...
+                Train data (304 + α col): row_id, time_id, investment_id, target, f_x, ... , fold
         """
         row[0] = int(row[0].split("_")[0])
 
         if row.shape[0] == 302:
-            self[row[1]].features.extend(row[2:].reshape(1, -1))
+            self[row[1]].features.extend(row[2:302].reshape(1, -1))
 
         else:
-            self[row[2]].features.extend(row[4:].reshape(1, -1))
+            self[row[2]].features.extend(row[4:304].reshape(1, -1))
             self[row[2]].targets.extend(row[3:4].reshape(1, -1))
