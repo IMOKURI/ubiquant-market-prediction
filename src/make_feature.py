@@ -64,6 +64,7 @@ def make_feature(
     schema = get_feature_schema()
     feature_to_cols = {}
     dfs = []
+    default_feature_cols = [f"f_{n}" for n in range(300)]
 
     if feature_list_to_calc:
         features = []
@@ -75,7 +76,7 @@ def make_feature(
             else:
                 investment_id = row[2]
 
-            ctx = Context(store, investment_id, fallback_to_none=fallback_to_none)
+            ctx = Context(base_df[default_feature_cols].values, store, investment_id, fallback_to_none=fallback_to_none)
 
             for fname, func in feature_list_to_calc.items():
                 result = func(ctx)

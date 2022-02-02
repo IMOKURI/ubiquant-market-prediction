@@ -4,12 +4,12 @@ import traceback
 import warnings
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Any
 
 import numpy as np
+from nptyping import NDArray
 
 from ..feature_store import Store
-from ..investment import Investment
 
 _ALL_FEATURES = {}  # type: Dict[str, Callable]
 _ALL_FEATURE_NAMES = set()
@@ -20,6 +20,7 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Context:
+    base_array: NDArray[(Any, Any), Any]
     store: Store
     investment_id: int
     current_feature_name: str = ""
