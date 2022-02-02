@@ -12,7 +12,8 @@
   "dataset_sources": [
     "speeddemon/hydracore105",
     "imokuri/ump-models",
-    "imokuri/nptyping"
+    "imokuri/nptyping",
+    "imokuri/typish"
   ],
   "kernel_sources": [],
   "competition_sources": [
