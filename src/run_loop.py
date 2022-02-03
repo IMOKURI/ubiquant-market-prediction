@@ -240,9 +240,7 @@ def inference(c, df, device, models):
         # elapsed = time.time() - start_time
         # log.info(f"time: {elapsed:.0f}s")
 
-    np.nan_to_num(predictions, copy=False)
-
-    df[c.params.label_name] = np.mean(predictions, axis=1)
+    df[c.params.label_name] = np.nanmean(predictions, axis=1)
 
     return df
 
