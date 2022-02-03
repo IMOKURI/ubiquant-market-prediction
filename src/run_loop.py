@@ -2,6 +2,7 @@ import gc
 import logging
 import os
 import time
+import traceback
 
 import numpy as np
 import pandas as pd
@@ -89,7 +90,9 @@ def train_fold(c, df, fold, device):
                 for row in train_df.values:
                     store.append(row)
 
-                pred_df = make_feature(train_df, store, c.params.feature_set, feature_store, with_target=True)
+                pred_df = make_feature(
+                    train_df, store, c.params.feature_set, feature_store, with_target=True, fallback_to_none=False
+                )
                 train_ds = make_dataset(c, pred_df)
 
             else:
@@ -137,7 +140,9 @@ def train_fold(c, df, fold, device):
                 for row in valid_df.values:
                     store.append(row)
 
-                pred_df = make_feature(valid_df, store, c.params.feature_set, feature_store, with_target=True)
+                pred_df = make_feature(
+                    valid_df, store, c.params.feature_set, feature_store, with_target=True, fallback_to_none=False
+                )
                 valid_ds = make_dataset(c, pred_df)
             else:
                 valid_ds = make_dataset(c, valid_df)
@@ -151,7 +156,11 @@ def train_fold(c, df, fold, device):
                 preds = 1 / (1 + np.exp(-preds))
 
             valid_pred_df[c.params.label_name] = preds
-            iter_valid.predict(valid_pred_df)
+
+            try:
+                iter_valid.predict(valid_pred_df)
+            except Exception:
+                log.error(traceback.format_exc())
 
             if n % c.settings.print_freq == 0 or n == (len(iter_valid) - 1):
                 log.info(
@@ -230,6 +239,8 @@ def inference(c, df, device, models):
 
         # elapsed = time.time() - start_time
         # log.info(f"time: {elapsed:.0f}s")
+
+    np.nan_to_num(predictions, copy=False)
 
     df[c.params.label_name] = np.mean(predictions, axis=1)
 

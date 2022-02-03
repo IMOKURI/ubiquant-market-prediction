@@ -56,9 +56,13 @@ class TimeSeriesAPI:
         assert self.pred_calls == self.next_calls - 1, "You must get the next batch before making a new prediction."
         assert pred_df.columns.to_list() == ["row_id", "target"], "Prediction dataframe have invalid columns."
 
-        pred_df = pred_df.astype({"row_id": np.dtype("str"), "target": np.dtype("float64")})
+        pred_df = pred_df.astype({"row_id": np.dtype("str"), "target": np.dtype("float32")})
+
         self.predictions.append(pred_df)
         self.pred_calls += 1
+
+        if pred_df["target"].isnull().sum() > 0:
+            log.warning(f"The prediction contains Nan.\n{pred_df[pred_df['target'].isnull()]}")
 
         if self.scoring:
             try:

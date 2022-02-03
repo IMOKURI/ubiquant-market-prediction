@@ -58,8 +58,10 @@ def make_feature(
         if "f999_target" in feature_list_from_cache:
             del feature_list_from_cache["f999_target"]
 
-    # log.info(f"  features to calculate: {list(feature_list_to_calc.keys())}")
-    # log.info(f"  features from cache: {list(feature_list_from_cache.keys())}")
+    log.debug(
+        f"  features to calculate: {list(feature_list_to_calc.keys())}, "
+        f"features from cache: {list(feature_list_from_cache.keys())}"
+    )
 
     schema = get_feature_schema()
     feature_to_cols = {}
@@ -79,10 +81,13 @@ def make_feature(
             ctx = Context(base_df[default_feature_cols].values, store, investment_id, fallback_to_none=fallback_to_none)
 
             for fname, func in feature_list_to_calc.items():
+
                 result = func(ctx)
+
                 for k in result:
                     if k in feature:
                         raise ValueError(f"Feature name {k} is duplicated across features.")
+
                 if fname not in feature_to_cols:
                     feature_to_cols[fname] = list(result.keys())
 
@@ -91,10 +96,12 @@ def make_feature(
                     for c in feature_to_cols[fname]:
                         assert c in result, f"column schema inconsistent in feature {fname}"
                         assert c in schema_f, f"column schema mismatch, expected: {schema_f}, actual: {c}"
+
                     for c in schema_f:
                         assert (
                             c in feature_to_cols[fname]
                         ), f"column schema mismatch. {c} not found in generated feature"
+
                     for c in result.keys():
                         assert c in feature_to_cols[fname], f"column schema inconsistent in feature {fname}"
 
@@ -115,5 +122,8 @@ def make_feature(
 
     assert len(dfs)
     dst = pd.concat(dfs, axis=1)
+
+    # TODO: Nan のときのハンドリング
+    assert dst.isnull().values.sum() == 0, f"Feature DataFrame contains Nan. {dst.isnull().values.sum()}"
 
     return dst
