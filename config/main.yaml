@@ -42,6 +42,7 @@ settings:
   dirs:
     working: ${hydra:runtime.cwd}
     input: ${hydra:runtime.cwd}/../inputs/
+    feature: ${settings.dirs.input}features/
     # train_image: ${settings.dirs.input}train/
     # test_image: ${settings.dirs.input}test/
 
@@ -73,7 +74,7 @@ params:
   use_feature: True
   feature_set: ["f000"]
   dataset: ump_1
-  model: ump_1dcnn
+  model: ump_1
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []
   # pretrained:

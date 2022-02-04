@@ -6,6 +6,8 @@ import pandas as pd
 
 from .feature_store import Store
 from .features.base import Context, get_feature, get_feature_schema, get_features, normalize_feature_name
+from .features.f000_basic import *
+from .features.f100_lag import *
 
 log = logging.getLogger(__name__)
 
@@ -92,6 +94,7 @@ def make_feature(
                     feature_to_cols[fname] = list(result.keys())
 
                 if debug:
+                    # デコレーター のアイテム名と 特徴量生成関数の出力した キー が等しいかチェックしている。
                     schema_f = schema[fname]
                     for c in feature_to_cols[fname]:
                         assert c in result, f"column schema inconsistent in feature {fname}"

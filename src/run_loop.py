@@ -67,7 +67,6 @@ def train_fold(c, df, fold, device):
     scheduler = make_scheduler(c, optimizer, train_ds)
 
     es = EarlyStopping(c=c, fold=fold)
-    feature_store = os.path.join(c.settings.dirs.input, "features")
 
     # ====================================================
     # Loop
@@ -94,7 +93,13 @@ def train_fold(c, df, fold, device):
                     store.append(row)
 
                 pred_df = make_feature(
-                    train_df, store, c.params.feature_set, feature_store, with_target=True, fallback_to_none=False
+                    train_df,
+                    store,
+                    c.params.feature_set,
+                    c.settings.dirs.feature,
+                    with_target=True,
+                    fallback_to_none=False,
+                    debug=c.settings.debug,
                 )
                 train_ds = make_dataset(c, pred_df)
 
@@ -147,7 +152,13 @@ def train_fold(c, df, fold, device):
                     store.append(row)
 
                 pred_df = make_feature(
-                    valid_df, store, c.params.feature_set, feature_store, with_target=True, fallback_to_none=False
+                    valid_df,
+                    store,
+                    c.params.feature_set,
+                    c.settings.dirs.feature,
+                    with_target=True,
+                    fallback_to_none=False,
+                    debug=c.settings.debug,
                 )
                 valid_ds = make_dataset(c, pred_df)
             else:
