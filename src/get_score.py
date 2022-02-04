@@ -19,7 +19,7 @@ def get_score(scoring, y_true, y_pred):
             return stats.pearsonr(y_true, y_pred)
         except ValueError:
             log.warning(traceback.format_exc())
-            return None, None
+            return 0, 0
 
     else:
         raise Exception("Invalid scoring.")

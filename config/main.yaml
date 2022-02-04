@@ -61,7 +61,7 @@ settings:
 params:
   seed: 440
   n_class: 1
-  preprocess: "power"
+  preprocess: False
   n_fold: 5
   skip_training: False
   epoch: 20
@@ -73,7 +73,7 @@ params:
   group_name: investment_id
   time_name: time_id
   label_name: target
-  use_feature: False
+  use_feature: True
   feature_set: ["f000"]
   dataset: ump_1
   model: ump_1
