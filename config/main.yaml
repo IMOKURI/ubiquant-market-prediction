@@ -43,6 +43,7 @@ settings:
     working: ${hydra:runtime.cwd}
     input: ${hydra:runtime.cwd}/../inputs/
     feature: ${settings.dirs.input}features/
+    preprocess: ${settings.dirs.input}preprocess/
     # train_image: ${settings.dirs.input}train/
     # test_image: ${settings.dirs.input}test/
 
@@ -60,6 +61,7 @@ settings:
 params:
   seed: 440
   n_class: 1
+  preprocess: "power"
   n_fold: 5
   skip_training: False
   epoch: 20

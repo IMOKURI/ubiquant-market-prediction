@@ -7,6 +7,7 @@ from .utils import reduce_mem_usage
 
 # from .make_features import create_features, select_features
 from .make_fold import make_fold
+from .preprocess import preprocess
 
 log = logging.getLogger(__name__)
 
@@ -38,6 +39,9 @@ class InputData:
 
             # if c.settings.debug:
             #     df = sample_for_debug(c, df)
+
+            if stem == "train":
+                df = preprocess(c, df)
 
             if stem == "train" and use_fold:
                 df = make_fold(c, df)

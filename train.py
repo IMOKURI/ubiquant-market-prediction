@@ -27,7 +27,6 @@ def main(c):
 
     oof_df = pd.DataFrame()
     losses = utils.AverageMeter()
-
     single_run = False
 
     for fold in range(c.params.n_fold):
