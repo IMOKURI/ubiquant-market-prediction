@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 import numpy as np
 import scipy.stats as stats
@@ -14,7 +15,11 @@ def get_score(scoring, y_true, y_pred):
     elif scoring == "accuracy":
         return accuracy_score(y_true, y_pred)
     elif scoring == "pearson":
-        return stats.pearsonr(y_true, y_pred)
+        try:
+            return stats.pearsonr(y_true, y_pred)
+        except ValueError:
+            log.warning(traceback.format_exc())
+            return None, None
 
     else:
         raise Exception("Invalid scoring.")

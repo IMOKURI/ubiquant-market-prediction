@@ -102,7 +102,6 @@ def train_fold(c, df, fold, device):
                     debug=c.settings.debug,
                 )
                 train_ds = make_dataset(c, pred_df)
-
             else:
                 train_ds = make_dataset(c, train_df)
 

@@ -1,11 +1,14 @@
 # https://qiita.com/FukuharaYohei/items/7508f2146c63ffe16b1e
 
+import logging
 import os
 import pickle
 
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, PowerTransformer
+
+log = logging.getLogger(__name__)
 
 
 def preprocess(c, df: pd.DataFrame):
@@ -28,10 +31,12 @@ def preprocess(c, df: pd.DataFrame):
 def fit_transform(c, scaler_class: type, data: np.ndarray):
     scaler_path = os.path.join(c.settings.dirs.preprocess, f"{c.params.preprocess}.pkl")
     if os.path.exists(scaler_path):
+        log.info("Load pretrained scaler.")
         scaler = pickle.load(open(scaler_path, "rb"))
         new_data = scaler.transform(data)
 
     else:
+        log.info("Fit and save scaler.")
         scaler = scaler_class()
         new_data = scaler.fit_transform(data)
 
