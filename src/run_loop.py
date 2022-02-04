@@ -84,6 +84,9 @@ def train_fold(c, df, fold, device):
 
         start = time.time()
         for n, (train_df, train_pred_df) in enumerate(iter_train):
+            train_df.reset_index(drop=True, inplace=True)
+            train_pred_df.reset_index(drop=True, inplace=True)
+
             gc.collect()
 
             if c.params.use_feature:
@@ -134,6 +137,9 @@ def train_fold(c, df, fold, device):
 
         start = time.time()
         for n, (valid_df, valid_pred_df) in enumerate(iter_valid):
+            valid_df.reset_index(drop=True, inplace=True)
+            valid_pred_df.reset_index(drop=True, inplace=True)
+
             gc.collect()
 
             if c.params.use_feature:
@@ -215,7 +221,7 @@ def train_fold(c, df, fold, device):
 
 
 def inference(c, df, device, models):
-    predictions = np.zeros((len(df), len(models)))
+    predictions = np.zeros((len(df), len(models)), dtype=np.float64)
     # (len(df), len(c.params.pretrained) * c.params.n_fold))
 
     for n, model in enumerate(models):
