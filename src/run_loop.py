@@ -156,6 +156,7 @@ def train_fold(c, df, fold, device):
                     store,
                     c.params.feature_set,
                     c.settings.dirs.feature,
+                    load_from_store=not c.settings.debug,
                     with_target=True,
                     fallback_to_none=False,
                     debug=c.settings.debug,
