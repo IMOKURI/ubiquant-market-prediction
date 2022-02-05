@@ -4,6 +4,7 @@ from typing import Dict, Any
 from nptyping import NDArray
 
 from .streampy import StreamPy
+from .utils import in_kaggle
 
 
 class Investment:
@@ -42,9 +43,10 @@ class Investments:
                 Test data (302 col): row_id, investment_id, f_x, ...
                 Train data (304 + α col): row_id, time_id, investment_id, target, f_x, ... , fold
         """
-        row[0] = int(row[0].split("_")[0])
+        # time_id を使うかどうか
+        # row[0] = int(row[0].split("_")[0])
 
-        if row.shape[0] == 302:
+        if in_kaggle() or row.shape[0] == 302:
             self[row[1]].features.extend(row[2:302].reshape(1, -1))
 
         else:

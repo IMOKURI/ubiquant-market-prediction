@@ -9,6 +9,7 @@ from nptyping import NDArray
 from omegaconf.dictconfig import DictConfig
 
 from .investment import Investments
+from .utils import catch_everything_in_kaggle
 
 
 def is_notebook():
@@ -41,9 +42,11 @@ class Store:
         return cls(investments)
 
     def append(self, row: NDArray[(Any,), Any]):
-        np.nan_to_num(row, copy=False)
+        # ここではなく、特徴量生成後、にやる
+        # row = np.nan_to_num(row)
 
         # TODO: 最終的に catch_everything_in_kaggle をいれていく
+        # with catch_everything_in_kaggle():
         self.investments.extend(row)
 
     @classmethod

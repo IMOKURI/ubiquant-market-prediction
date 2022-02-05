@@ -8,6 +8,7 @@ from .feature_store import Store
 from .features.base import Context, get_feature, get_feature_schema, get_features, normalize_feature_name
 from .features.f000_basic import *
 from .features.f100_lag import *
+from .utils import in_kaggle
 
 log = logging.getLogger(__name__)
 
@@ -72,13 +73,10 @@ def make_feature(
 
     if feature_list_to_calc:
         features = []
+
         for row in base_df.values:
             feature = {}
-
-            if row.shape[0] == 302:
-                investment_id = row[1]
-            else:
-                investment_id = row[2]
+            investment_id = row[1] if (in_kaggle() or row.shape[0] == 302) else row[2]
 
             ctx = Context(base_df[default_feature_cols].values, store, investment_id, fallback_to_none=fallback_to_none)
 
@@ -126,7 +124,8 @@ def make_feature(
     assert len(dfs)
     dst = pd.concat(dfs, axis=1)
 
+    dst.fillna(0.0, inplace=True)
     # TODO: Nan のときのハンドリング
-    assert dst.isnull().values.sum() == 0, f"Feature DataFrame contains Nan. {dst.isnull().values.sum()}"
+    # assert dst.isnull().values.sum() == 0, f"Feature DataFrame contains Nan. {dst.isnull().values.sum()}"
 
     return dst
