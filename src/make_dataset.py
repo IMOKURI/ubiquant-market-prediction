@@ -1,3 +1,5 @@
+import lightgbm as lgb
+import pandas as pd
 import torch
 from torch.utils.data import DataLoader, Dataset
 
@@ -9,6 +11,23 @@ def make_dataset(c, df, label=True):
     else:
         raise Exception("Invalid dataset.")
     return ds
+
+
+def make_dataset_lightgbm(c, train_df, valid_df):
+    train_labels = train_df[c.params.label_name]
+    valid_labels = valid_df[c.params.label_name]
+
+    for col in ["row_id", "investment_id", "time_id", c.params.label_name, "fold", "group_fold", "time_fold"]:
+        try:
+            train_df = train_df.drop(col, axis=1)
+            valid_df = valid_df.drop(col, axis=1)
+        except KeyError:
+            pass
+
+    train_ds = lgb.Dataset(data=train_df, label=train_labels)
+    valid_ds = lgb.Dataset(data=valid_df, label=valid_labels)
+
+    return train_ds, valid_ds
 
 
 def make_dataloader(c, ds, shuffle, drop_last):

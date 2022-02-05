@@ -13,7 +13,7 @@ import wandb
 from .feature_store import Store
 
 # from .get_score import get_score
-from .make_dataset import make_dataloader, make_dataset
+from .make_dataset import make_dataloader, make_dataset, make_dataset_lightgbm
 from .make_feature import make_feature
 from .make_fold import train_test_split
 from .make_loss import make_criterion, make_optimizer, make_scheduler
@@ -23,6 +23,24 @@ from .time_series_api import TimeSeriesAPI
 from .utils import AverageMeter, timeSince
 
 log = logging.getLogger(__name__)
+
+
+def train_fold_lightgbm(c, df, fold, **kwargs):
+    train_folds, valid_folds = train_test_split(c, df, fold)
+    train_ds, valid_ds = make_dataset_lightgbm(c, train_folds, valid_folds)
+
+    lgb_params = {
+        'objective': 'regression',
+        'boosting': 'gbdt',
+        'metric': 'rmse',
+        'learning_rate': 0.05,
+        'min_data_in_leaf': 20,
+        'feature_fraction': 0.7,
+        'num_leaves': 41,
+        'drop_rate': 0.1,
+        'seed': c.params.seed,
+        'num_iterations': 100,
+    }
 
 
 def train_fold(c, df, fold, device):
