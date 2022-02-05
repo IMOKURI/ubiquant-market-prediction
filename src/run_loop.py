@@ -15,7 +15,7 @@ from .feature_store import Store
 # from .get_score import get_score
 from .make_dataset import make_dataloader, make_dataset
 from .make_feature import make_feature
-from .make_fold import CPCV_INDEX_5FOLD
+from .make_fold import train_test_split
 from .make_loss import make_criterion, make_optimizer, make_scheduler
 from .make_model import make_model
 from .run_epoch import inference_epoch, train_epoch, validate_epoch
@@ -29,26 +29,7 @@ def train_fold(c, df, fold, device):
     # ====================================================
     # Data Loader
     # ====================================================
-    if c.params.fold == "time_series":
-        val_idx = df[df["fold"] == fold].index
-        trn_idx = df[df.index < val_idx.min()].index
-    elif c.params.fold == "time_series_group":
-        val_idx = df[df["time_fold"] == c.params.n_fold - 1].index  # Most recent data
-        trn_idx = df[(df.index < val_idx.min()) & (df["group_fold"] != fold)].index
-    elif c.params.fold == "simple_cpcv":
-        val_idx = df[df["time_fold"].isin(CPCV_INDEX_5FOLD["val_time_id"][fold])].index
-        trn_idx = df[
-            (~df["time_fold"].isin(CPCV_INDEX_5FOLD["val_time_id"][fold]))
-            & (df["group_fold"] != CPCV_INDEX_5FOLD["val_group_id"][fold])
-        ].index
-    else:
-        trn_idx = df[df["fold"] != fold].index
-        val_idx = df[df["fold"] == fold].index
-
-    log.info(f"Num of training data: {len(trn_idx)}, num of validation data: {len(val_idx)}")
-
-    train_folds = df.loc[trn_idx].reset_index(drop=True)
-    valid_folds = df.loc[val_idx].reset_index(drop=True)
+    train_folds, valid_folds = train_test_split(c, df, fold)
 
     train_ds = make_dataset(c, train_folds)
     # valid_ds = make_dataset(c, valid_folds)
