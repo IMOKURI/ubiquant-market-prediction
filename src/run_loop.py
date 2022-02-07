@@ -4,6 +4,7 @@ import os
 import time
 import traceback
 
+import lightgbm as lgb
 import numpy as np
 import pandas as pd
 import torch
@@ -39,8 +40,15 @@ def train_fold_lightgbm(c, df, fold, **kwargs):
         "num_leaves": 41,
         "drop_rate": 0.1,
         "seed": c.params.seed,
-        "num_iterations": 100,
     }
+
+    booster = lgb.train(
+        train_set=train_ds,
+        valid_sets=[train_ds, valid_ds],
+        valid_names=["train", "valid"],
+        params=lgb_params,
+        num_boost_round=1000,
+    )
 
 
 def train_fold(c, df, fold, device):
