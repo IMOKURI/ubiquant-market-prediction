@@ -76,7 +76,7 @@ def make_feature(
 
         for row in base_df.values:
             feature = {}
-            investment_id = row[1] if (in_kaggle() or row.shape[0] == 302) else row[2]
+            investment_id = int(row[1]) if (in_kaggle() or row.shape[0] == 302) else int(row[2])
 
             ctx = Context(base_df[default_feature_cols].values, store, investment_id, fallback_to_none=fallback_to_none)
 

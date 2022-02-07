@@ -10,10 +10,7 @@ from nptyping import NDArray
 class StreamPy:
     """
     Numpy array that aim to improve performance to extend.
-
     Holds the number of rows currently stored and expands it before it fills up.
-
-    When an exception occurs in extend, the specified value will be inserted instead.
     """
 
     def __init__(

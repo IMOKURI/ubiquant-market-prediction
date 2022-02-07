@@ -47,8 +47,8 @@ class Investments:
         # row[0] = int(row[0].split("_")[0])
 
         if in_kaggle() or row.shape[0] == 302:
-            self[row[1]].features.extend(row[2:302].reshape(1, -1))
+            self[int(row[1])].features.extend(row[2:302].astype(np.float32).reshape(1, -1))
 
         else:
-            self[row[2]].features.extend(row[4:304].reshape(1, -1))
-            self[row[2]].targets.extend(row[3:4].reshape(1, -1))
+            self[int(row[2])].features.extend(row[4:304].astype(np.float32).reshape(1, -1))
+            self[int(row[2])].targets.extend(row[3:4].astype(np.float32).reshape(1, -1))

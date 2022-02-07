@@ -50,7 +50,7 @@ class Store:
         self.investments.extend(row)
 
     @classmethod
-    def train(cls, c: DictConfig):
+    def train(cls, c: DictConfig) -> "Store":
         instance = cls.empty()
 
         if os.path.exists(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet")):
