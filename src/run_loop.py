@@ -30,16 +30,16 @@ def train_fold_lightgbm(c, df, fold, **kwargs):
     train_ds, valid_ds = make_dataset_lightgbm(c, train_folds, valid_folds)
 
     lgb_params = {
-        'objective': 'regression',
-        'boosting': 'gbdt',
-        'metric': 'rmse',
-        'learning_rate': 0.05,
-        'min_data_in_leaf': 20,
-        'feature_fraction': 0.7,
-        'num_leaves': 41,
-        'drop_rate': 0.1,
-        'seed': c.params.seed,
-        'num_iterations': 100,
+        "objective": "regression",
+        "boosting": "gbdt",
+        "metric": "rmse",
+        "learning_rate": 0.05,
+        "min_data_in_leaf": 20,
+        "feature_fraction": 0.7,
+        "num_leaves": 41,
+        "drop_rate": 0.1,
+        "seed": c.params.seed,
+        "num_iterations": 100,
     }
 
 
@@ -91,6 +91,12 @@ def train_fold(c, df, fold, device):
                 for row in train_df.values:
                     store.append(row)
 
+                    investment_id_ = int(row[2])
+                    features_ = row[4:304].astype(np.float32)
+                    assert np.array_equal(
+                        store.investments[investment_id_].features.last_n(1).squeeze(), features_
+                    ), "Features are different before and after storing in the store"
+
                 pred_df = make_feature(
                     train_df,
                     store,
@@ -101,6 +107,11 @@ def train_fold(c, df, fold, device):
                     debug=c.settings.debug,
                 )
                 train_ds = make_dataset(c, pred_df)
+
+                assert len(train_df["investment_id"].unique()) == len(
+                    train_df["investment_id"]
+                ), "investment_id is not unique."
+                assert len(train_df) == len(pred_df), "train_df and pred_df do not same size."
             else:
                 train_ds = make_dataset(c, train_df)
 
@@ -149,6 +160,12 @@ def train_fold(c, df, fold, device):
                 for row in valid_df.values:
                     store.append(row)
 
+                    investment_id_ = int(row[2])
+                    features_ = row[4:304].astype(np.float32)
+                    assert np.array_equal(
+                        store.investments[investment_id_].features.last_n(1).squeeze(), features_
+                    ), "Features are different before and after storing in the store"
+
                 pred_df = make_feature(
                     valid_df,
                     store,
@@ -160,6 +177,11 @@ def train_fold(c, df, fold, device):
                     debug=c.settings.debug,
                 )
                 valid_ds = make_dataset(c, pred_df)
+
+                assert len(valid_df["investment_id"].unique()) == len(
+                    valid_df["investment_id"]
+                ), "investment_id is not unique."
+                assert len(valid_df) == len(pred_df), "valid_df and pred_df do not same size."
             else:
                 valid_ds = make_dataset(c, valid_df)
 
