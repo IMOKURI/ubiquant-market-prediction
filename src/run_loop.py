@@ -1,4 +1,5 @@
 import gc
+import joblib
 import logging
 import os
 import time
@@ -36,10 +37,14 @@ def train_fold_lightgbm(c, df, fold):
         "boosting": "gbdt",
         "metric": "rmse",
         "learning_rate": 0.05,
-        "min_data_in_leaf": 20,
+        "min_data_in_leaf": 120,
         "feature_fraction": 0.7,
-        "num_leaves": 41,
-        "drop_rate": 0.1,
+        "bagging_fraction": 0.85,
+        "lambda_l1": 0.01,
+        "lambda_l2": 0.01,
+        "num_leaves": 96,
+        "max_depth": 12,
+        "drop_rate": 0.0,
         "seed": c.params.seed,
     }
 
@@ -47,7 +52,7 @@ def train_fold_lightgbm(c, df, fold):
     callbacks = [
         lgb.log_evaluation(period=c.settings.print_freq),
         lgb.record_evaluation(eval_result),
-        lgb.early_stopping(stopping_rounds=20),
+        lgb.early_stopping(stopping_rounds=100),
         # wandb_callback(),
     ]
 
@@ -56,10 +61,13 @@ def train_fold_lightgbm(c, df, fold):
         valid_sets=[train_ds, valid_ds],
         valid_names=["train", "valid"],
         params=lgb_params,
-        num_boost_round=200,
+        num_boost_round=10000,
         callbacks=callbacks,
     )
 
+    os.makedirs(f"fold{fold}", exist_ok=True)
+    joblib.dump(booster, f"fold{fold}/lightgbm.pkl")
+    # booster.save_model(f"fold{fold}/lightgbm.pkl", num_iteration=booster.best_iteration)
     # log_summary(booster, save_model_checkpoint=True)
 
     feature_cols = [f"f_{n}" for n in range(300)]
