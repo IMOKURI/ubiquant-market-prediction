@@ -30,6 +30,23 @@ def make_dataset_lightgbm(c, train_df, valid_df):
     return train_ds, valid_ds
 
 
+def make_dataset_general(c, train_df, valid_df):
+    train_labels = train_df[c.params.label_name].values
+    valid_labels = valid_df[c.params.label_name].values
+
+    for col in ["row_id", "investment_id", "time_id", c.params.label_name, "fold", "group_fold", "time_fold"]:
+        try:
+            train_df = train_df.drop(col, axis=1)
+            valid_df = valid_df.drop(col, axis=1)
+        except KeyError:
+            pass
+
+    train_ds = train_df.values
+    valid_ds = valid_df.values
+
+    return train_ds, train_labels, valid_ds, valid_labels
+
+
 def make_dataloader(c, ds, shuffle, drop_last):
     dataloader = DataLoader(
         ds,

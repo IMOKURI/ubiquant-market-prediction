@@ -4,6 +4,7 @@ import traceback
 import numpy as np
 import scipy.stats as stats
 import wandb
+from pytorch_tabnet.metrics import Metric
 from sklearn.metrics import accuracy_score, mean_squared_error
 
 log = logging.getLogger(__name__)
@@ -46,3 +47,13 @@ def record_result(c, df, fold, loss=None):
 
 def pearson_coef(data):
     return data.corr()["target"]["preds"]
+
+
+class TNPearson(Metric):
+    def __init__(self):
+        self._name = "pearson"
+        self._maximize = True
+
+    def __call__(self, y_true, y_pred):
+        score, preds = stats.pearsonr(y_true, y_pred)
+        return score

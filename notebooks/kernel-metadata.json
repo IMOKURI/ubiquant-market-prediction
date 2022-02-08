@@ -14,7 +14,8 @@
     "speeddemon/hydracore105",
     "imokuri/ump-models",
     "imokuri/nptyping",
-    "imokuri/typish"
+    "imokuri/typish",
+    "ryati131457/pytorchtabnet"
   ],
   "kernel_sources": [],
   "competition_sources": [
