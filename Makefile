@@ -16,19 +16,13 @@ train3: ## Run training section 3
 	@for i in {10..14}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
 
 train-lgb: ## Run training by LightGBM
-	@for i in {0..4}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) settings.training_method="lightgbm" > /tmp/nohup_$(NOW).log & sleep 2; done
-
-train-lgb2: ## Run training by LightGBM section 2
-	@for i in {5..9}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) settings.training_method="lightgbm" > /tmp/nohup_$(NOW).log & sleep 2; done
-
-train-lgb3: ## Run training by LightGBM section 3
-	@for i in {10..14}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) settings.training_method="lightgbm" > /tmp/nohup_$(NOW).log & sleep 2; done
+	@nohup python train.py wandb.group=$(GROUP) settings.training_method="lightgbm" > /tmp/nohup_$(NOW).log
 
 debug: ## Run training debug mode
 	@python train.py settings.debug=True hydra.verbose=True +settings.run_fold=1
 
 debug-lgb: ## Run training by LightGBM debug mode
-	@python train.py settings.debug=True hydra.verbose=True +settings.run_fold=1 settings.training_method="lightgbm"
+	@python train.py settings.debug=True hydra.verbose=True settings.training_method="lightgbm"
 
 early-stop: ## Abort training gracefully
 	@touch abort-training.flag
