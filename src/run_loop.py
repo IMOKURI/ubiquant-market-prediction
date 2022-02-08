@@ -42,12 +42,16 @@ def train_fold_lightgbm(c, df, fold, **kwargs):
         "seed": c.params.seed,
     }
 
+    eval_result = {}
+    callbacks = [lgb.log_evaluation(period=c.settings.print_freq), lgb.record_evaluation(eval_result)]
+
     booster = lgb.train(
         train_set=train_ds,
         valid_sets=[train_ds, valid_ds],
         valid_names=["train", "valid"],
         params=lgb_params,
-        num_boost_round=1000,
+        num_boost_round=100,
+        callbacks=callbacks,
     )
 
 
@@ -281,7 +285,7 @@ def inference(c, df, device, models):
         if "LogitsLoss" in c.params.criterion:
             preds = 1 / (1 + np.exp(-preds))
 
-        assert len(df) == len(preds), "Inference result size does not match input size."
+        # assert len(df) == len(preds), "Inference result size does not match input size."
 
         predictions[:, n] = preds
 
