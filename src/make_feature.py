@@ -74,7 +74,7 @@ def make_feature(
     if feature_list_to_calc:
         features = []
 
-        for investment_id in base_df["investment_id"]:
+        for n, investment_id in enumerate(base_df["investment_id"]):
             feature = {}  # type: dict[str, float]
 
             ctx = Context(base_df[default_feature_cols].values, store, investment_id, fallback_to_none=fallback_to_none)
@@ -82,6 +82,11 @@ def make_feature(
             for fname, func in feature_list_to_calc.items():
 
                 result = func(ctx)  # type: dict[str, float]
+
+                if fname == "f000_initial_features":
+                    assert (
+                        result == base_df[default_feature_cols].astype("float32").to_dict(orient="records")[n]
+                    ), "Basic features output is not correct."
 
                 for k in result:
                     if k in feature:
