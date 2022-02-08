@@ -1,3 +1,4 @@
+import joblib
 import logging
 import os
 
@@ -26,12 +27,19 @@ def make_model(c, device=None, model_path=None):
     return model
 
 
-def load_model(c, device):
+def load_model(c, device, pretrained=None):
+    if pretrained is None:
+        pretrained = c.params.pretrained
     models = []
 
-    for training in c.params.pretrained:
+    for training in pretrained:
         c.params.model = training.model
-        model = make_model(c, device, training.dir)
+
+        if training.model == "lightgbm":
+            model = joblib.load(os.path.join(training.dir, "lightgbm.pkl"))
+        else:
+            model = make_model(c, device, training.dir)
+
         models.append(model)
 
     return models

@@ -285,6 +285,17 @@ def train_fold(c, df, fold, device):
     return valid_folds, es.best_score, es.best_loss
 
 
+def inference_lightgbm(df, models):
+    predictions = np.zeros((len(df), len(models)), dtype=np.float64)
+    feature_cols = [f"f_{n}" for n in range(300)]
+
+    for n, model in enumerate(models):
+        preds = model.predict(df[feature_cols])
+        predictions[:, n] = preds
+
+    return predictions
+
+
 def inference(c, df, device, models):
     predictions = np.zeros((len(df), len(models)), dtype=np.float64)
     # (len(df), len(c.params.pretrained) * c.params.n_fold))
@@ -313,9 +324,7 @@ def inference(c, df, device, models):
         # elapsed = time.time() - start_time
         # log.info(f"time: {elapsed:.0f}s")
 
-    df[c.params.label_name] = np.nanmean(predictions, axis=1)
-
-    return df
+    return predictions
 
 
 # https://github.com/Bjarten/early-stopping-pytorch

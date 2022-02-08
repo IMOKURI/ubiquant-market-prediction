@@ -83,6 +83,7 @@ def make_feature(
 
                 result = func(ctx)  # type: dict[str, float]
 
+                # このコードの実行にとても時間がかかっている
                 # if fname == "f000_initial_features":
                 #     assert (
                 #         result == base_df[default_feature_cols].astype("float32").to_dict(orient="records")[n]
