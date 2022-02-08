@@ -58,6 +58,8 @@ settings:
   amp: True
   multi_gpu: True
 
+  training_method: nn
+
 params:
   seed: 440
   n_class: 1

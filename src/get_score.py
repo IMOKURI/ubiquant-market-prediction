@@ -26,13 +26,10 @@ def get_score(scoring, y_true, y_pred):
 
 
 def record_result(c, df, fold, loss=None):
-    prob = 1.0
     if c.params.scoring == "mean":
         score = df["preds"].mean()
     elif c.params.scoring == "pearson":
-        preds = df["preds"].values
-        labels = df[c.params.label_name].values
-        score, prob = get_score(c.params.scoring, labels, preds)
+        score = np.mean(df[["time_id", "target", "preds"]].groupby("time_id").apply(pearson_coef))
     else:
         preds = df["preds"].values
         labels = df[c.params.label_name].values
@@ -40,8 +37,12 @@ def record_result(c, df, fold, loss=None):
 
     log.info(f"Score: {score:<.5f}")
     if c.wandb.enabled:
-        wandb.log({"score": score, "prob": prob, "fold": fold})
+        wandb.log({"score": score, "fold": fold})
         if loss is not None:
             wandb.log({"loss": loss, "fold": fold})
 
     return score
+
+
+def pearson_coef(data):
+    return data.corr()["target"]["preds"]

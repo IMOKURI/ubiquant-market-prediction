@@ -10,6 +10,7 @@ import pandas as pd
 import torch
 import torch.cuda.amp as amp
 import wandb
+from wandb.lightgbm import wandb_callback, log_summary
 
 from .feature_store import Store
 
@@ -26,7 +27,7 @@ from .utils import AverageMeter, timeSince
 log = logging.getLogger(__name__)
 
 
-def train_fold_lightgbm(c, df, fold, **kwargs):
+def train_fold_lightgbm(c, df, fold):
     train_folds, valid_folds = train_test_split(c, df, fold)
     train_ds, valid_ds = make_dataset_lightgbm(c, train_folds, valid_folds)
 
@@ -43,16 +44,28 @@ def train_fold_lightgbm(c, df, fold, **kwargs):
     }
 
     eval_result = {}
-    callbacks = [lgb.log_evaluation(period=c.settings.print_freq), lgb.record_evaluation(eval_result)]
+    callbacks = [
+        lgb.log_evaluation(period=c.settings.print_freq),
+        lgb.record_evaluation(eval_result),
+        lgb.early_stopping(stopping_rounds=20),
+        # wandb_callback(),
+    ]
 
     booster = lgb.train(
         train_set=train_ds,
         valid_sets=[train_ds, valid_ds],
         valid_names=["train", "valid"],
         params=lgb_params,
-        num_boost_round=100,
+        num_boost_round=200,
         callbacks=callbacks,
     )
+
+    # log_summary(booster, save_model_checkpoint=True)
+
+    feature_cols = [f"f_{n}" for n in range(300)]
+    valid_folds["preds"] = booster.predict(valid_folds[feature_cols], num_iteration=booster.best_iteration)
+
+    return valid_folds, 0, booster.best_score["valid"]["rmse"]
 
 
 def train_fold(c, df, fold, device):

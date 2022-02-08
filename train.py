@@ -8,7 +8,7 @@ from omegaconf.errors import ConfigAttributeError
 import src.utils as utils
 from src.get_score import record_result
 from src.load_data import InputData
-from src.run_loop import train_fold
+from src.run_loop import train_fold, train_fold_lightgbm
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +39,11 @@ def main(c):
         log.info(f"========== fold {fold} training ==========")
         utils.fix_seed(c.params.seed + fold)
 
-        _oof_df, score, loss = train_fold(c, input.train, fold, device)
+        if c.settings.training_method == "lightgbm":
+            _oof_df, _, loss = train_fold_lightgbm(c, input.train, fold)
+        else:
+            _oof_df, score, loss = train_fold(c, input.train, fold, device)
+
         oof_df = pd.concat([oof_df, _oof_df])
         losses.update(loss)
 
