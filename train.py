@@ -28,8 +28,9 @@ def main(c):
     oof_df = pd.DataFrame()
     losses = utils.AverageMeter()
     single_run = False
+    num_fold = c.params.n_fold * 3 if c.params.fold == "simple_cpcv" else c.params.n_fold
 
-    for fold in range(c.params.n_fold):
+    for fold in range(num_fold):
         try:
             fold = int(c.settings.run_fold)
             single_run = True
@@ -55,9 +56,13 @@ def main(c):
 
     # oof_df.to_csv("oof_df.csv", index=False)
     if c.params.fold in ["time_series_group", "simple_cpcv"]:
-        oof_df[["row_id", "time_id", "investment_id", "target", "preds", "group_fold"]].to_feather("oof_df.f")
+        oof_df[["row_id", "time_id", "investment_id", "target", "preds", "group_fold"]].reset_index(
+            drop=True
+        ).to_feather("oof_df.f")
     else:
-        oof_df[["row_id", "time_id", "investment_id", "target", "preds", "fold"]].to_feather("oof_df.f")
+        oof_df[["row_id", "time_id", "investment_id", "target", "preds", "fold"]].reset_index(drop=True).to_feather(
+            "oof_df.f"
+        )
 
     log.info("========== final result ==========")
     score = record_result(c, oof_df, c.params.n_fold, losses.avg)
