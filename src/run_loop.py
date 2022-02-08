@@ -281,6 +281,8 @@ def inference(c, df, device, models):
         if "LogitsLoss" in c.params.criterion:
             preds = 1 / (1 + np.exp(-preds))
 
+        assert len(df) == len(preds), "Inference result size does not match input size."
+
         predictions[:, n] = preds
 
         # elapsed = time.time() - start_time

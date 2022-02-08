@@ -61,7 +61,7 @@ def make_feature(
         if "f999_target" in feature_list_from_cache:
             del feature_list_from_cache["f999_target"]
 
-    # log.debug(
+    # log.info(
     #     f"  features to calculate: {list(feature_list_to_calc.keys())}, "
     #     f"features from cache: {list(feature_list_from_cache.keys())}"
     # )
@@ -75,13 +75,13 @@ def make_feature(
         features = []
 
         for investment_id in base_df["investment_id"]:
-            feature = {}
+            feature = {}  # type: dict[str, float]
 
             ctx = Context(base_df[default_feature_cols].values, store, investment_id, fallback_to_none=fallback_to_none)
 
             for fname, func in feature_list_to_calc.items():
 
-                result = func(ctx)
+                result = func(ctx)  # type: dict[str, float]
 
                 for k in result:
                     if k in feature:

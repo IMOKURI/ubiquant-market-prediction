@@ -26,7 +26,7 @@ def train_epoch(c, train_loader, model, criterion, optimizer, scheduler, scaler,
         with amp.autocast(enabled=c.settings.amp):
             # y_preds = model(images)
             # y_preds = model(images).squeeze()
-            y_preds = model(features).squeeze(1)
+            y_preds = model(features).squeeze()
 
             loss = criterion(y_preds, labels)
 
@@ -90,7 +90,7 @@ def validate_epoch(c, valid_loader, model, criterion, device):
         with torch.no_grad():
             # y_preds = model(images)
             # y_preds = model(images).squeeze()
-            y_preds = model(features).squeeze(1)
+            y_preds = model(features).squeeze()
 
         loss = criterion(y_preds, labels)
         losses.update(loss.item(), batch_size)
@@ -119,7 +119,7 @@ def inference_epoch(c, inference_loader, model, device):
     model.eval()
 
     size = len(inference_loader.dataset)
-    preds = np.zeros((size,))
+    preds = np.zeros((size,), dtype=np.float64)
     # start = time.time()
 
     for step, features in enumerate(inference_loader):
@@ -130,7 +130,7 @@ def inference_epoch(c, inference_loader, model, device):
         with torch.no_grad():
             # y_preds = model(images)
             # y_preds = model(images).squeeze()
-            y_preds = model(features).squeeze(1)
+            y_preds = model(features).squeeze()
 
         begin = step * c.params.batch_size
         end = begin + batch_size
