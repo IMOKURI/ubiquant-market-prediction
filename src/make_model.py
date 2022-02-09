@@ -79,7 +79,7 @@ class OneDCNNModel(nn.Module):
     def __init__(self, c):
         super().__init__()
         self.amp = c.settings.amp
-        self.input = 300
+        self.input = c.params.model_input
 
         self.hidden_size = 1024
         self.ch_1 = 128

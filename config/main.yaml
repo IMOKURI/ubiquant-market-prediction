@@ -76,9 +76,12 @@ params:
   time_name: time_id
   label_name: target
   use_feature: True
-  feature_set: ["f000"]
+  feature_set:
+    - "f000"
+    - "f100"
   dataset: ump_1
   model: ump_1dcnn
+  model_input: 600
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []
   # pretrained:
