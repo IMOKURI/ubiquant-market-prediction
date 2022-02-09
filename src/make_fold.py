@@ -20,7 +20,7 @@ def make_fold(c, df):
         df = moving_window_kfold(c, df, c.params.time_name)
     elif c.params.fold == "time_series_group":
         df = moving_window_group_kfold(c, df, c.params.group_name, c.params.time_name)
-    elif c.params.fold == "simple_cpcv":
+    elif c.params.fold in ["combinational_group", "combinational_purged"]:
         df = simple_combinational_purged_kfold(c, df, c.params.group_name, c.params.time_name)
 
     else:
@@ -33,15 +33,36 @@ def train_test_split(c, df, fold):
     if c.params.fold == "time_series":
         val_idx = df[df["fold"] == fold].index
         trn_idx = df[df.index < val_idx.min()].index
+
     elif c.params.fold == "time_series_group":
         val_idx = df[df["time_fold"] == c.params.n_fold - 1].index  # Most recent data
         trn_idx = df[(df.index < val_idx.min()) & (df["group_fold"] != fold)].index
-    elif c.params.fold == "simple_cpcv":
+
+    elif c.params.fold == "combinational_group":
+        # https://github.com/IMOKURI/ubiquant-market-prediction/issues/1#issuecomment-1025375366
+        # 学習時に使わない group (investment_id) がある
+        # purged と embargo がない
         val_idx = df[df["time_fold"].isin(CPCV_INDEX_5FOLD["val_time_id"][fold])].index
         trn_idx = df[
             (~df["time_fold"].isin(CPCV_INDEX_5FOLD["val_time_id"][fold]))
             & (df["group_fold"] != CPCV_INDEX_5FOLD["val_group_id"][fold])
         ].index
+
+    elif c.params.fold == "combinational_purged":
+        # すべての investment_id を学習で使う
+        val_idx = df[df["time_fold"].isin(CPCV_INDEX_5FOLD["val_time_id"][fold])].index
+
+        embargo = 40  # num of investment_id * 0.01
+        purged = 10
+
+        banned = []
+        for f in CPCV_INDEX_5FOLD["val_time_id"][fold]:
+            idx = df[df["time_fold"] == f].index
+            banned += list(range(min(idx) - purged, max(idx) + purged + embargo))
+        banned = list(set(banned))
+
+        trn_idx = df[~df.index.isin(banned)].index
+
     else:
         trn_idx = df[df["fold"] != fold].index
         val_idx = df[df["fold"] == fold].index
