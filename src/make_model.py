@@ -53,7 +53,7 @@ class MLPModel(nn.Module):
     def __init__(self, c):
         super().__init__()
         self.amp = c.settings.amp
-        self.dim = 300
+        self.dim = c.params.model_input
         self.layers = 4
 
         self.bn_1 = nn.BatchNorm1d(self.dim)
