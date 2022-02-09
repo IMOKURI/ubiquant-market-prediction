@@ -111,7 +111,7 @@ class OneDCNNModel(nn.Module):
 
         self.conv2 = nn.Sequential(
             nn.BatchNorm1d(self.ch_2),
-            nn.Dropout(0.3),
+            nn.Dropout(0.2),
             nn.utils.weight_norm(
                 nn.Conv1d(self.ch_2, self.ch_2, kernel_size=3, stride=1, padding=1, bias=True), dim=None
             ),
@@ -130,7 +130,7 @@ class OneDCNNModel(nn.Module):
 
         self.head = nn.Sequential(
             nn.BatchNorm1d(self.ch_po_2),
-            nn.Dropout(0.2),
+            nn.Dropout(0.1),
             nn.utils.weight_norm(nn.Linear(self.ch_po_2, 1)),
         )
 
