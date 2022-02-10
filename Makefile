@@ -1,4 +1,4 @@
-.PHONY: help build train
+.PHONY: help
 .DEFAULT_GOAL := help
 SHELL = /bin/bash
 
@@ -50,6 +50,9 @@ clean-pyc: ## Remove python artifacts
 
 clean-training: ## Remove training artifacts
 	@rm -rf ../outputs ../multirun abort-training.flag
+
+test: ## Run tests
+	@pytest
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "\033[38;2;98;209;150m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
