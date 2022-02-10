@@ -91,10 +91,3 @@ def normalize_feature_name(name: str) -> str:
 
 def _prefix(feature_name: str) -> str:
     return feature_name.split("_")[0]
-
-
-@feature(["target"])
-def f999_target(ctx: Context) -> Dict:
-    return {
-        "target": ctx.store.investments[ctx.investment_id].targets.last_n(1)[0][0],
-    }

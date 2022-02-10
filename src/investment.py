@@ -1,6 +1,6 @@
-import numpy as np
-from typing import Dict, Any
+from typing import Any, Dict
 
+import numpy as np
 from nptyping import NDArray
 
 from .streampy import StreamPy
@@ -8,10 +8,11 @@ from .utils import in_kaggle
 
 
 class Investment:
-    def __init__(self, investment_id: int, features: StreamPy, targets: StreamPy):
+    def __init__(self, investment_id: int, features: StreamPy, targets: StreamPy, pseudo_targets: StreamPy):
         self.investment_id = investment_id
         self.features = features
         self.targets = targets
+        self.pseudo_targets = pseudo_targets
 
     @classmethod
     def empty(cls, investment_id: int, dtype: type = np.float32, default_value: float = 0.0):
@@ -21,10 +22,15 @@ class Investment:
         target_cols = ["target"]
         targets = StreamPy.empty(target_cols, dtype, default_value)
 
-        return Investment(investment_id, features, targets)
+        pseudo_target_cols = ["pseudo_target"]
+        pseudo_targets = StreamPy.empty(pseudo_target_cols, dtype, default_value)
+
+        return Investment(investment_id, features, targets, pseudo_targets)
 
     def last_n(self, n: int) -> "Investment":
-        return Investment(self.investment_id, self.features.last_n(n), self.targets.last_n(n))
+        return Investment(
+            self.investment_id, self.features.last_n(n), self.targets.last_n(n), self.pseudo_targets.last_n(n)
+        )
 
 
 class Investments:
@@ -52,3 +58,12 @@ class Investments:
         else:
             self[int(row[2])].features.extend(row[4:304].astype(np.float32).reshape(1, -1))
             self[int(row[2])].targets.extend(row[3:4].astype(np.float32).reshape(1, -1))
+
+    def extend_post(self, row: NDArray[(Any,), Any]):
+        """
+        Args:
+            row (NDArray[(Any, ), Any]): 以下のスキーマを期待している
+                Train/Test data (2 col): row_id, target
+        """
+
+        self[int(row[0].split("_")[1])].pseudo_targets.extend(row[1:2].astype(np.float32).reshape(1, -1))

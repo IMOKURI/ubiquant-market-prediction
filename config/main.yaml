@@ -78,11 +78,12 @@ params:
   label_name: target
   use_feature: True
   feature_set:
-    - "f000"
-    - "f100"
+    - "f000"  # f000_initial_features
+    - "f100"  # f100_vs_same_time_id_average
+    - "f901"  # f901_pseudo_target
   dataset: ump_1
-  model: ump_lstm
-  model_input: 600
+  model: ump_1dcnn
+  model_input: 601
   model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []

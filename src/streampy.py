@@ -55,7 +55,7 @@ class StreamPy:
         default_value: Any = None,
         capacity: int = 1000,
     ):
-        values = np.empty((capacity, len(columns)), dtype=dtype)
+        values = np.zeros((capacity, len(columns)), dtype=dtype)
 
         return cls(values, columns, default_value=default_value)
 

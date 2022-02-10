@@ -8,6 +8,7 @@ def test_construct():
 
     assert s.values.shape == (1000, 2)
     assert s.values.dtype == np.float32
+    assert s.values[0][0] == 0.0
     assert s.length == 0
     assert s.default_value is None
     assert s.capacity == 1000

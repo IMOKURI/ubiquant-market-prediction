@@ -8,6 +8,7 @@ from .feature_store import Store
 from .features.base import Context, get_feature, get_feature_schema, get_features, normalize_feature_name
 from .features.f000_basic import *
 from .features.f100_vs_average import *
+from .features.f900_target import *
 from .utils import in_kaggle
 
 log = logging.getLogger(__name__)
@@ -43,8 +44,8 @@ def make_feature(
     else:
         feature_dict = get_features()
 
-    if with_target and "f999_target" not in feature_dict:
-        feature_dict["f999_target"] = get_features()["f999_target"]
+    if with_target and "f900_target" not in feature_dict:
+        feature_dict["f900_target"] = get_features()["f900_target"]
 
     feature_paths = {fname: get_feature_path(feature_store, fingerprint, fname) for fname in feature_dict}
 
@@ -56,10 +57,10 @@ def make_feature(
         feature_list_from_cache = {}
 
     if not with_target:
-        if "f999_target" in feature_list_to_calc:
-            del feature_list_to_calc["f999_target"]
-        if "f999_target" in feature_list_from_cache:
-            del feature_list_from_cache["f999_target"]
+        if "f900_target" in feature_list_to_calc:
+            del feature_list_to_calc["f900_target"]
+        if "f900_target" in feature_list_from_cache:
+            del feature_list_from_cache["f900_target"]
 
     # log.info(
     #     f"  features to calculate: {list(feature_list_to_calc.keys())}, "

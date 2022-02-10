@@ -41,17 +41,6 @@ class Store:
 
         return cls(investments)
 
-    def append(self, row: NDArray[(Any,), Any]):
-        # row の中のデータは dtype: object であることに注意。
-
-        # ここではなく、特徴量生成後、にやる
-        # ↑ の前に dtype を変更しないといけない気がする。
-        # row = np.nan_to_num(row)
-
-        # TODO: 最終的に catch_everything_in_kaggle をいれていく
-        # with catch_everything_in_kaggle():
-        self.investments.extend(row)
-
     @classmethod
     def train(cls, c: DictConfig) -> "Store":
         instance = cls.empty()
@@ -70,3 +59,21 @@ class Store:
         gc.collect()
 
         return instance
+
+    def append(self, row: NDArray[(Any,), Any]):
+        # row の中のデータは dtype: object であることに注意。
+
+        # ここではなく、特徴量生成後、にやる
+        # ↑ の前に dtype を変更しないといけない気がする。
+        # row = np.nan_to_num(row)
+
+        # TODO: 最終的に catch_everything_in_kaggle をいれていく
+        # with catch_everything_in_kaggle():
+        self.investments.extend(row)
+
+    def append_post(self, row: NDArray[(Any,), Any]):
+        # row の中のデータは dtype: object であることに注意。
+
+        # TODO: 最終的に catch_everything_in_kaggle をいれていく
+        # with catch_everything_in_kaggle():
+        self.investments.extend_post(row)

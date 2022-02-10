@@ -166,6 +166,12 @@ def train_fold(c, df, fold, device):
                 )
             avg_train_loss.update(train_loss, len(train_df))
 
+            if c.params.use_feature:
+                # 推論のときは pseudo label だけど、学習のときは ground truth で。
+                # for row in train_pred_df[["row_id", "target"]].values:
+                for row in train_df[["row_id", "target"]].values:
+                    store.append_post(row)
+
             iter_train.predict(train_pred_df)
 
             if n % c.settings.print_freq == 0 or n == (len(iter_train) - 1):
@@ -227,6 +233,12 @@ def train_fold(c, df, fold, device):
                 preds = 1 / (1 + np.exp(-preds))
 
             valid_pred_df[c.params.label_name] = preds
+
+            if c.params.use_feature:
+                # 推論のときは pseudo label だけど、学習のときは ground truth で。
+                # for row in valid_pred_df[["row_id", "target"]].values:
+                for row in valid_df[["row_id", "target"]].values:
+                    store.append_post(row)
 
             try:
                 iter_valid.predict(valid_pred_df)
