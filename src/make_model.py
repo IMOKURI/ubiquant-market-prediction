@@ -15,6 +15,8 @@ def make_model(c, device=None, model_path=None):
         model = MLPModel(c)
     elif c.params.model == "ump_1dcnn":
         model = OneDCNNModel(c)
+    elif c.params.model == "ump_lstm":
+        model = LSTMModel(c)
     else:
         raise Exception("Invalid model.")
 
@@ -71,6 +73,48 @@ class MLPModel(nn.Module):
             x = self.head(x)
 
         return x
+
+
+class LSTMModel(nn.Module):
+    """
+    LSTM を DataParallel で使うときの注意。
+    hidden と cell の shape の batch_size が GPU数で分割された値になってしまう。
+    https://discuss.pytorch.org/t/dataparallel-lstm-gru-wrong-hidden-batch-size-8-gpus/6701
+    """
+
+    def __init__(self, c):
+        super().__init__()
+        self.amp = c.settings.amp
+
+        self.batch_size = c.params.batch_size
+        self.window_size = c.params.model_window  # Sequence for LSTM
+        self.input_size = c.params.model_input
+        self.hidden_size = 300
+
+        self.bn_1 = nn.BatchNorm1d(self.window_size)
+
+        self.lstm = nn.LSTM(self.input_size, self.hidden_size, batch_first=True)
+
+        # num_gpu = len(c.settings.gpus.split(","))
+        # hidden = torch.zeros(1, self.batch_size // num_gpu, self.hidden_size)
+        # cell = torch.zeros(1, self.batch_size // num_gpu, self.hidden_size)
+        # self.hidden_cell = (hidden, cell)
+
+        self.head = nn.Linear(self.hidden_size, 1)
+
+    def forward(self, x, h_c=None):
+        with amp.autocast(enabled=self.amp):
+            x = self.bn_1(x)
+
+            if h_c is None:
+                x, h_c = self.lstm(x)
+            else:
+                x, h_c = self.lstm(x, h_c)
+
+            x = self.head(x)
+            x = x[:, -1, :].view(-1, 1)  # Use last sequence output
+
+        return x, h_c
 
 
 # https://www.kaggle.com/c/lish-moa/discussion/202256

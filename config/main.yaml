@@ -81,8 +81,9 @@ params:
     - "f000"
     - "f100"
   dataset: ump_1
-  model: ump_1dcnn
+  model: ump_lstm
   model_input: 600
+  model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []
   # pretrained:

@@ -1,6 +1,6 @@
 # https://github.com/nyanp/streamdf/blob/main/streamdf/streamdf.py
 
-from typing import Any, Type, List
+from typing import Any, List, Type
 
 import numpy as np
 import pandas as pd
@@ -74,7 +74,13 @@ class StreamPy:
         self.length += n_row
 
     def last_n(self, n: int) -> np.ndarray:
-        return self.values[self.length - n : self.length]
+        res = self.values[max(self.length - n, 0) : self.length]
+
+        if len(res) == n:
+            return res
+
+        res = np.concatenate([np.zeros((len(res) - n, len(self.columns)), dtype=res.dtype), res])
+        return res
 
     def _grow(self, min_capacity):
         capacity = max(int(1.5 * self.capacity), min_capacity)
