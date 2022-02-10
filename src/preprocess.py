@@ -8,6 +8,7 @@ import time
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, PowerTransformer
+from sklearn.neighbors import NearestNeighbors
 
 from .utils import timeSince
 
@@ -24,12 +25,13 @@ def preprocess(c, df: pd.DataFrame):
         df = apply_scaler(c, df)
 
     if "neighbors":
-        ...
+        nearest_neighbors = fit_nearest_neighbors(c, df)
 
     return df, nearest_neighbors
 
 
 def apply_scaler(c, df: pd.DataFrame):
+    log.info("Apply scaler.")
     cols = [f"f_{n}" for n in range(300)]
 
     start = time.time()
@@ -68,3 +70,23 @@ def scaler_fit_transform(c, scaler_class: type, col: str, data: np.ndarray):
         pickle.dump(scaler, open(scaler_path, "wb"))
 
     return new_data, scaler
+
+
+def fit_nearest_neighbors(c, df: pd.DataFrame):
+    log.info("Fit nearest neighbors.")
+    cols = [f"f_{n}" for n in range(300)]
+    nn_path = os.path.join(c.settings.dirs.preprocess, "nearest_neibors.pkl")
+
+    if os.path.exists(nn_path):
+        log.debug("Load pretrained nearest neighbors.")
+        nn = pickle.load(open(nn_path, "rb"))
+
+    else:
+        log.debug("Fit and save nearest neighbors.")
+        nn = NearestNeighbors()
+        nn.fit(df[cols].values)
+
+        os.makedirs(c.settings.dirs.preprocess, exist_ok=True)
+        pickle.dump(nn, open(nn_path, "wb"))
+
+    return nn
