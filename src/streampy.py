@@ -79,7 +79,7 @@ class StreamPy:
         if len(res) == n:
             return res
 
-        res = np.concatenate([np.zeros((len(res) - n, len(self.columns)), dtype=res.dtype), res])
+        res = np.concatenate([np.zeros((n - len(res), len(self.columns)), dtype=res.dtype), res])
         return res
 
     def _grow(self, min_capacity):
