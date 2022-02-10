@@ -63,7 +63,8 @@ settings:
 params:
   seed: 440
   n_class: 1
-  preprocess: False
+  preprocess:
+    - "neighbors"
   n_fold: 5
   skip_training: False
   epoch: 20

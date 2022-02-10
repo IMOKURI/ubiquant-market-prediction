@@ -15,19 +15,31 @@ log = logging.getLogger(__name__)
 
 
 def preprocess(c, df: pd.DataFrame):
-    if not c.params.preprocess:
-        return df
+    nearest_neighbors = None
 
+    if not c.params.preprocess:
+        return df, nearest_neighbors
+
+    if any([scaler in c.params.preprocess for scaler in ["standard", "power"]]):
+        df = apply_scaler(c, df)
+
+    if "neighbors":
+        ...
+
+    return df, nearest_neighbors
+
+
+def apply_scaler(c, df: pd.DataFrame):
     cols = [f"f_{n}" for n in range(300)]
 
     start = time.time()
     for n, data in enumerate(df[cols].values.T):
 
-        if c.params.preprocess == "standard":
-            new_data, _ = fit_transform(c, StandardScaler, f"f_{n}", data.reshape(-1, 1))
+        if "standard" in c.params.preprocess:
+            new_data, _ = scaler_fit_transform(c, StandardScaler, f"standard_scaler_f_{n}", data.reshape(-1, 1))
 
-        elif c.params.preprocess == "power":
-            new_data, _ = fit_transform(c, PowerTransformer, f"f_{n}", data.reshape(-1, 1))
+        elif "power" in c.params.preprocess:
+            new_data, _ = scaler_fit_transform(c, PowerTransformer, f"power_transformer_f_{n}", data.reshape(-1, 1))
 
         else:
             raise Exception("Invalid preprocess method.")
@@ -40,8 +52,8 @@ def preprocess(c, df: pd.DataFrame):
     return df
 
 
-def fit_transform(c, scaler_class: type, col: str, data: np.ndarray):
-    scaler_path = os.path.join(c.settings.dirs.preprocess, c.params.preprocess, f"{col}.pkl")
+def scaler_fit_transform(c, scaler_class: type, col: str, data: np.ndarray):
+    scaler_path = os.path.join(c.settings.dirs.preprocess, f"{col}.pkl")
     if os.path.exists(scaler_path):
         log.debug("Load pretrained scaler.")
         scaler = pickle.load(open(scaler_path, "rb"))
@@ -52,7 +64,7 @@ def fit_transform(c, scaler_class: type, col: str, data: np.ndarray):
         scaler = scaler_class()
         new_data = scaler.fit_transform(data)
 
-        os.makedirs(os.path.join(c.settings.dirs.preprocess, c.params.preprocess), exist_ok=True)
+        os.makedirs(c.settings.dirs.preprocess, exist_ok=True)
         pickle.dump(scaler, open(scaler_path, "wb"))
 
     return new_data, scaler

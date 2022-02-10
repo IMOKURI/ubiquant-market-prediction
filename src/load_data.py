@@ -41,7 +41,8 @@ class InputData:
             #     df = sample_for_debug(c, df)
 
             if stem == "train":
-                df = preprocess(c, df)
+                df, nearest_neighbors = preprocess(c, df)
+                setattr(self, "neighbors", nearest_neighbors)
 
             if stem == "train" and use_fold:
                 df = make_fold(c, df)
