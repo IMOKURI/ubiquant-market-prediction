@@ -10,8 +10,8 @@ def f900_target(ctx: Context) -> Dict:
     }
 
 
-@feature(["pseudo_target"])
-def f901_pseudo_target(ctx: Context) -> Dict:
+@feature(["pseudo_last_target"])
+def f901_pseudo_last_target(ctx: Context) -> Dict:
     return {
-        "pseudo_target": ctx.store.investments[ctx.investment_id].pseudo_targets.last_n(1)[0][0],
+        "pseudo_last_target": ctx.store.investments[ctx.investment_id].pseudo_targets.last_n(1)[0][0],
     }

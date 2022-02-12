@@ -8,6 +8,7 @@ from .feature_store import Store
 from .features.base import Context, get_feature, get_feature_schema, get_features, normalize_feature_name
 from .features.f000_basic import *
 from .features.f100_vs_average import *
+from .features.f200_lag import *
 from .features.f900_target import *
 from .utils import in_kaggle
 

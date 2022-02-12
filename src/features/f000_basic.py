@@ -1,7 +1,8 @@
-import numpy as np
 from typing import Dict
 
-from .base import feature, Context
+import numpy as np
+
+from .base import Context, feature
 
 
 @feature([f"f_{n}" for n in range(300)])

@@ -63,8 +63,8 @@ settings:
 params:
   seed: 440
   n_class: 1
-  preprocess:
-    - "neighbors"
+  preprocess: []
+    # - "neighbors"
   n_fold: 5
   skip_training: False
   epoch: 20
@@ -80,10 +80,11 @@ params:
   feature_set:
     - "f000"  # f000_initial_features
     - "f100"  # f100_vs_same_time_id_average
-    - "f901"  # f901_pseudo_target
+    - "f200"  # f200_lag_last_features
+    - "f901"  # f901_pseudo_last_target
   dataset: ump_1
   model: ump_1dcnn
-  model_input: 601
+  model_input: 901
   model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []
