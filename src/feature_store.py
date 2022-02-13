@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 import pandas as pd
-from typing import Any
+from typing import Any, Optional
 
 from nptyping import NDArray
 from omegaconf.dictconfig import DictConfig
@@ -32,8 +32,9 @@ else:
 
 
 class Store:
-    def __init__(self, investments: Investments):
+    def __init__(self, investments: Investments, training_array: Optional[NDArray[(Any, Any), Any]] = None):
         self.investments = investments
+        self.training_array = training_array
 
     @classmethod
     def empty(cls) -> "Store":
@@ -45,18 +46,21 @@ class Store:
     def train(cls, c: DictConfig) -> "Store":
         instance = cls.empty()
 
-        if os.path.exists(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet")):
-            df = pd.read_parquet(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet"))
-        elif os.path.exists(os.path.join(c.settings.dirs.input, "train.f")):
-            df = pd.read_feather(os.path.join(c.settings.dirs.input, "train.f"))
-        else:
-            df = pd.read_csv(os.path.join(c.settings.dirs.input, "train.csv"))
+        if os.path.exists(os.path.join(c.settings.dirs.input_minimal, "train_min.npy")):
+            instance.training_array = np.load(os.path.join(c.settings.dirs.input_minimal, "train_min.npy"))
 
-        for row in tqdm(df.values):
-            instance.append(row)
-
-        del df
-        gc.collect()
+        # if os.path.exists(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet")):
+        #     df = pd.read_parquet(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet"))
+        # elif os.path.exists(os.path.join(c.settings.dirs.input, "train.f")):
+        #     df = pd.read_feather(os.path.join(c.settings.dirs.input, "train.f"))
+        # else:
+        #     df = pd.read_csv(os.path.join(c.settings.dirs.input, "train.csv"))
+        #
+        # for row in tqdm(df.values):
+        #     instance.append(row)
+        #
+        # del df
+        # gc.collect()
 
         return instance
 

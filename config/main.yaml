@@ -42,6 +42,7 @@ settings:
   dirs:
     working: ${hydra:runtime.cwd}
     input: ${hydra:runtime.cwd}/../inputs/
+    input_minimal: ${hydra:runtime.cwd}/../datasets/inputs/
     feature: ${settings.dirs.input}features/
     preprocess: ${settings.dirs.input}preprocess/
     # train_image: ${settings.dirs.input}train/
@@ -63,8 +64,8 @@ settings:
 params:
   seed: 440
   n_class: 1
-  preprocess: []
-    # - "neighbors"
+  preprocess:  # []
+    - "neighbors"
   n_fold: 5
   skip_training: False
   epoch: 20

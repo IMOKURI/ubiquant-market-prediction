@@ -87,6 +87,6 @@ def fit_nearest_neighbors(c, df: pd.DataFrame):
         nn.fit(df[cols].values)
 
         os.makedirs(c.settings.dirs.preprocess, exist_ok=True)
-        pickle.dump(nn, open(nn_path, "wb"))
+        pickle.dump(nn, open(nn_path, "wb"), protocol=4)
 
     return nn
