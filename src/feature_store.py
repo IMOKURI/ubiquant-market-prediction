@@ -56,9 +56,9 @@ class Store:
         if os.path.exists(os.path.join(c.settings.dirs.input_minimal, "train_min.npy")):
             instance.training_array = np.load(os.path.join(c.settings.dirs.input_minimal, "train_min.npy"))
 
-        if os.path.exists(os.path.join(c.settings.dirs.preprocess, "nearest_neibors.pkl")):
+        if os.path.exists(os.path.join(c.settings.dirs.preprocess, "nearest_neighbors.pkl")):
             instance.nearest_neighbors = pickle.load(
-                open(os.path.join(c.settings.dirs.preprocess, "nearest_neibors.pkl"), "rb")
+                open(os.path.join(c.settings.dirs.preprocess, "nearest_neighbors.pkl"), "rb")
             )
 
         # if os.path.exists(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet")):

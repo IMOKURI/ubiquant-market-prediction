@@ -73,7 +73,7 @@ def scaler_fit_transform(c, scaler_class: type, col: str, data: np.ndarray):
 def fit_nearest_neighbors(c, df: pd.DataFrame):
     log.info("Fit nearest neighbors.")
     cols = [f"f_{n}" for n in range(300)]
-    nn_path = os.path.join(c.settings.dirs.preprocess, "nearest_neibors.pkl")
+    nn_path = os.path.join(c.settings.dirs.preprocess, "nearest_neighbors.pkl")
 
     if os.path.exists(nn_path):
         log.debug("Load pretrained nearest neighbors.")
