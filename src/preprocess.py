@@ -16,18 +16,16 @@ log = logging.getLogger(__name__)
 
 
 def preprocess(c, df: pd.DataFrame):
-    nearest_neighbors = None
-
     if not c.params.preprocess:
-        return df, nearest_neighbors
+        return df
 
     if any([scaler in c.params.preprocess for scaler in ["standard", "power"]]):
         df = apply_scaler(c, df)
 
     if "neighbors":
-        nearest_neighbors = fit_nearest_neighbors(c, df)
+        _ = fit_nearest_neighbors(c, df)
 
-    return df, nearest_neighbors
+    return df
 
 
 def apply_scaler(c, df: pd.DataFrame):

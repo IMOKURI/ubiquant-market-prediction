@@ -109,7 +109,8 @@ def train_fold(c, df, fold, device):
         # ====================================================
         # Training
         # ====================================================
-        store = Store.empty()
+        # store = Store.empty()
+        store = Store.train(c)
         iter_train = TimeSeriesAPI(train_folds, scoring=False)
         avg_train_loss = AverageMeter()
 
@@ -184,7 +185,8 @@ def train_fold(c, df, fold, device):
         # ====================================================
         # Validation
         # ====================================================
-        store = Store.empty()
+        # store = Store.empty()
+        store = Store.train(c)
         iter_valid = TimeSeriesAPI(valid_folds)
         avg_val_loss = AverageMeter()
 

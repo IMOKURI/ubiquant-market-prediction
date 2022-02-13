@@ -8,5 +8,4 @@ from .base import feature, Context
 def f100_vs_same_time_id_average(ctx: Context) -> Dict[str, float]:
     mean = np.nanmean(ctx.base_array, axis=0)
     latest = ctx.store.investments[ctx.investment_id].features.last_n(1).squeeze()
-
     return {f"vs_same_time_avg_{n}": v for n, v in enumerate(latest - mean)}

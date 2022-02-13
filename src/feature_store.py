@@ -1,12 +1,13 @@
 import gc
 import os
+import pickle
+from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
-from typing import Any, Optional
-
 from nptyping import NDArray
 from omegaconf.dictconfig import DictConfig
+from sklearn.neighbors import NearestNeighbors
 
 from .investment import Investments
 from .utils import catch_everything_in_kaggle
@@ -32,9 +33,15 @@ else:
 
 
 class Store:
-    def __init__(self, investments: Investments, training_array: Optional[NDArray[(Any, Any), Any]] = None):
+    def __init__(
+        self,
+        investments: Investments,
+        training_array: Optional[NDArray[(Any, Any), Any]] = None,
+        nearest_neighbors: Optional[NearestNeighbors] = None,
+    ):
         self.investments = investments
         self.training_array = training_array
+        self.nearest_neighbors = nearest_neighbors
 
     @classmethod
     def empty(cls) -> "Store":
@@ -48,6 +55,11 @@ class Store:
 
         if os.path.exists(os.path.join(c.settings.dirs.input_minimal, "train_min.npy")):
             instance.training_array = np.load(os.path.join(c.settings.dirs.input_minimal, "train_min.npy"))
+
+        if os.path.exists(os.path.join(c.settings.dirs.preprocess, "nearest_neibors.pkl")):
+            instance.nearest_neighbors = pickle.load(
+                open(os.path.join(c.settings.dirs.preprocess, "nearest_neibors.pkl"), "rb")
+            )
 
         # if os.path.exists(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet")):
         #     df = pd.read_parquet(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet"))

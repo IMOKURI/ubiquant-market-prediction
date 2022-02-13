@@ -16,6 +16,7 @@
     "imokuri/nptyping",
     "imokuri/typish",
     "imokuri/ump-train-minimal",
+    "imokuri/ump-preprocess",
     "ryati131457/pytorchtabnet"
   ],
   "kernel_sources": [],

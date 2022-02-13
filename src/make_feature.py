@@ -9,6 +9,7 @@ from .features.base import Context, get_feature, get_feature_schema, get_feature
 from .features.f000_basic import *
 from .features.f100_vs_average import *
 from .features.f200_lag import *
+from .features.f300_vs_nearest_neighbors import *
 from .features.f900_target import *
 from .utils import in_kaggle
 
