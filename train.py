@@ -45,7 +45,7 @@ def main(c):
         if c.settings.training_method == "lightgbm":
             _oof_df, _, loss = train_fold_lightgbm(c, input.train, fold)
         else:
-            _oof_df, score, loss = train_fold(c, input.train, fold, device)
+            _oof_df, score, loss = train_fold(c, input, fold, device)
 
         oof_df = pd.concat([oof_df, _oof_df])
         losses.update(loss)

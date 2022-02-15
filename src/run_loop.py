@@ -76,7 +76,9 @@ def train_fold_lightgbm(c, df, fold):
     return valid_folds, 0, booster.best_score["valid"]["rmse"]
 
 
-def train_fold(c, df, fold, device):
+def train_fold(c, input, fold, device):
+    df = input.train
+
     # ====================================================
     # Data Loader
     # ====================================================

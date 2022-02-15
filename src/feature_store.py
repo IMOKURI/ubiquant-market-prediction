@@ -1,13 +1,16 @@
 import gc
 import os
 import pickle
-from typing import Any, Optional
+from typing import Any, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 from nptyping import NDArray
 from omegaconf.dictconfig import DictConfig
+from ppca import PPCA
+from sklearn.decomposition import PCA
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import PowerTransformer, StandardScaler
 
 from .investment import Investments
 from .utils import catch_everything_in_kaggle
@@ -37,10 +40,18 @@ class Store:
         self,
         investments: Investments,
         training_array: Optional[NDArray[(Any, Any), Any]] = None,
+        pca_training_array: Optional[NDArray[(Any, Any), Any]] = None,
+        sampling_array: Optional[NDArray[(Any, Any), Any]] = None,
+        scalers: Optional[List[Union[StandardScaler, PowerTransformer]]] = None,
+        pca: Optional[Union[PCA, PPCA]] = None,
         nearest_neighbors: Optional[NearestNeighbors] = None,
     ):
         self.investments = investments
         self.training_array = training_array
+        self.pca_training_array = pca_training_array
+        self.sampling_array = sampling_array
+        self.scalers = scalers
+        self.pca = pca
         self.nearest_neighbors = nearest_neighbors
 
     @classmethod
@@ -53,26 +64,37 @@ class Store:
     def train(cls, c: DictConfig) -> "Store":
         instance = cls.empty()
 
-        if os.path.exists(os.path.join(c.settings.dirs.input_minimal, "train_min.npy")):
-            instance.training_array = np.load(os.path.join(c.settings.dirs.input_minimal, "train_min.npy"))
+        # training_array_path = os.path.join(c.settings.dirs.input_minimal, "train_min.npy")
+        # pca_training_array_path = os.path.join(c.settings.dirs.input_minimal, f"pca_{c.params.pca_n_components}.npy")
+        sampling_array_path = os.path.join(c.settings.dirs.input_minimal, "sampling_array_0_001.npy")
+        standard_scaler_0_path = os.path.join(c.settings.dirs.preprocess, "standard_scaler_f_0.pkl")
+        # power_transformer_0_path = os.path.join(c.settings.dirs.preprocess, "power_transformer_f_0.pkl")
+        pca_path = os.path.join(c.settings.dirs.preprocess, f"pca_{c.params.pca_n_components}.pkl")
+        nearest_neighbors_path = os.path.join(
+            c.settings.dirs.preprocess, f"nearest_neighbors_pca{c.params.pca_n_components}.pkl"
+        )
 
-        if os.path.exists(os.path.join(c.settings.dirs.preprocess, "nearest_neighbors.pkl")):
-            instance.nearest_neighbors = pickle.load(
-                open(os.path.join(c.settings.dirs.preprocess, "nearest_neighbors.pkl"), "rb")
-            )
+        # if os.path.exists(training_array_path):
+        #     instance.training_array = np.load(training_array_path)
 
-        # if os.path.exists(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet")):
-        #     df = pd.read_parquet(os.path.join(c.settings.dirs.feature, "train_low_mem.parquet"))
-        # elif os.path.exists(os.path.join(c.settings.dirs.input, "train.f")):
-        #     df = pd.read_feather(os.path.join(c.settings.dirs.input, "train.f"))
-        # else:
-        #     df = pd.read_csv(os.path.join(c.settings.dirs.input, "train.csv"))
-        #
-        # for row in tqdm(df.values):
-        #     instance.append(row)
-        #
-        # del df
-        # gc.collect()
+        # if os.path.exists(pca_training_array_path):
+        #     instance.pca_training_array = np.load(pca_training_array_path)
+
+        if os.path.exists(sampling_array_path):
+            instance.sampling_array = np.load(sampling_array_path)
+
+        if os.path.exists(standard_scaler_0_path):
+            scalers = []
+            for n in range(300):
+                scaler = pickle.load(open(standard_scaler_0_path.replace("0", str(n)), "rb"))
+                scalers.append(scaler)
+            instance.scalers = scalers
+
+        if os.path.exists(pca_path):
+            instance.pca = pickle.load(open(pca_path, "rb"))
+
+        if os.path.exists(nearest_neighbors_path):
+            instance.nearest_neighbors = pickle.load(open(nearest_neighbors_path, "rb"))
 
         return instance
 

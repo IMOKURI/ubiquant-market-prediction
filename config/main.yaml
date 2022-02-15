@@ -65,7 +65,10 @@ params:
   seed: 440
   n_class: 1
   preprocess:  # []
+    - "standard"
+    - "pca"
     - "neighbors"
+  pca_n_components: 50
   n_fold: 5
   skip_training: False
   epoch: 20
