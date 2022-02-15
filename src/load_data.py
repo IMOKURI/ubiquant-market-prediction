@@ -40,13 +40,7 @@ class InputData:
             #     df = sample_for_debug(c, df)
 
             if stem == "train":
-                df, scaled_df, pca_df = preprocess(c, df)
-
-                if scaled_df is not None:
-                    setattr(self, "scaled", scaled_df)
-
-                if pca_df is not None:
-                    setattr(self, "pca", pca_df)
+                df = preprocess(c, df)
 
             if stem == "train" and use_fold:
                 df = make_fold(c, df)

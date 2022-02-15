@@ -49,7 +49,10 @@ clean-pyc: ## Remove python artifacts
 	@find . -name '__pycache__' -exec rm -fr {} +
 
 clean-training: ## Remove training artifacts
-	@rm -rf ../outputs ../multirun abort-training.flag
+	@rm -rf ../outputs ../multirun ../inputs/preprocess/*.pkl abort-training.flag
+	@mv ../datasets/inputs/train_min.npy{,.tmp}
+	@rm -rf ../datasets/inputs/*.npy
+	@mv ../datasets/inputs/train_min.npy{.tmp,}
 
 test: ## Run tests
 	@pytest

@@ -65,9 +65,12 @@ params:
   seed: 440
   n_class: 1
   preprocess:  # []
-    - "standard"
+    - "standard_scaler"
+    # - "power_transformer"
     - "pca"
-    - "neighbors"
+    # - "ppca"
+    # - "nearest_neighbors"
+    - "faiss_nearest_neighbors"
   pca_n_components: 50
   n_fold: 5
   skip_training: False
