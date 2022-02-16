@@ -3,6 +3,7 @@ import os
 import pickle
 from typing import Any, List, Optional, Union
 
+import faiss
 import numpy as np
 import pandas as pd
 from nptyping import NDArray
@@ -40,7 +41,6 @@ class Store:
         self,
         investments: Investments,
         training_array: Optional[NDArray[(Any, Any), Any]] = None,
-        pca_training_array: Optional[NDArray[(Any, Any), Any]] = None,
         sampling_array: Optional[NDArray[(Any, Any), Any]] = None,
         scalers: Optional[List[Union[StandardScaler, PowerTransformer]]] = None,
         pca: Optional[Union[PCA, PPCA]] = None,
@@ -48,7 +48,6 @@ class Store:
     ):
         self.investments = investments
         self.training_array = training_array
-        self.pca_training_array = pca_training_array
         self.sampling_array = sampling_array
         self.scalers = scalers
         self.pca = pca
@@ -65,20 +64,17 @@ class Store:
         instance = cls.empty()
 
         # training_array_path = os.path.join(c.settings.dirs.input_minimal, "train_min.npy")
-        # pca_training_array_path = os.path.join(c.settings.dirs.input_minimal, f"pca_{c.params.pca_n_components}.npy")
-        sampling_array_path = os.path.join(c.settings.dirs.input_minimal, "sampling_array_0_001.npy")
+        sampling_array_path = os.path.join(c.settings.dirs.input_minimal, f"sampling_pca{c.params.pca_n_components}.npy")
+
         standard_scaler_0_path = os.path.join(c.settings.dirs.preprocess, "standard_scaler_f_0.pkl")
-        # power_transformer_0_path = os.path.join(c.settings.dirs.preprocess, "power_transformer_f_0.pkl")
         pca_path = os.path.join(c.settings.dirs.preprocess, f"pca_{c.params.pca_n_components}.pkl")
         nearest_neighbors_path = os.path.join(
-            c.settings.dirs.preprocess, f"nearest_neighbors_pca{c.params.pca_n_components}.pkl"
+            c.settings.dirs.preprocess,
+            f"faiss_nearest_neighbors_pca{c.params.pca_n_components}.index",
         )
 
         # if os.path.exists(training_array_path):
         #     instance.training_array = np.load(training_array_path)
-
-        # if os.path.exists(pca_training_array_path):
-        #     instance.pca_training_array = np.load(pca_training_array_path)
 
         if os.path.exists(sampling_array_path):
             instance.sampling_array = np.load(sampling_array_path)
@@ -94,7 +90,9 @@ class Store:
             instance.pca = pickle.load(open(pca_path, "rb"))
 
         if os.path.exists(nearest_neighbors_path):
-            instance.nearest_neighbors = pickle.load(open(nearest_neighbors_path, "rb"))
+            # instance.nearest_neighbors = pickle.load(open(nearest_neighbors_path, "rb"))
+            index_cpu = faiss.read_index(nearest_neighbors_path)
+            instance.nearest_neighbors = faiss.index_cpu_to_all_gpus(index_cpu)
 
         return instance
 

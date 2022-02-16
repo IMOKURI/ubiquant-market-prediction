@@ -16,7 +16,8 @@ def f300_vs_nearest_neighbors_average(ctx: Context) -> Dict[str, float]:
 
     pca_array = ctx.store.pca.transform(scaled)
 
-    neigh_index = ctx.store.nearest_neighbors.kneighbors(pca_array, n_neighbors=10, return_distance=False)
+    # neigh_index = ctx.store.nearest_neighbors.kneighbors(pca_array, n_neighbors=10, return_distance=False)
+    _, neigh_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(pca_array, dtype=np.float32), k=10)
 
     avg = np.zeros((300,), dtype=np.float32)
     for index in neigh_index[0]:

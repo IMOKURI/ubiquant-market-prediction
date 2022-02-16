@@ -5,6 +5,7 @@ import os
 import pickle
 import time
 from functools import wraps
+from typing import Callable
 
 import faiss
 import numpy as np
@@ -20,30 +21,55 @@ from .utils import timeSince
 log = logging.getLogger(__name__)
 
 
-def cached_preprocess(func):
+# TODO:
+# デコレーターをもうちょっとなんとかしたい (アンチパターンな気がする)
+# - デコレーターと 引数の関数 func とで戻り値の type が変わってしまっている
+# - 引数の関数 func の引数が、 func の中では使われていない
+
+
+def cached_preprocess(func: Callable):
+    """
+    前処理を行うクラスがすでに保存されていれば、それをロードする。
+    保存されていなければ、 func で生成、学習する。
+    与えられたデータを、学習済みクラスで前処理する。
+
+    Args:
+        func (Callable): 前処理を行うクラスのインスタンスを生成し、学習する関数
+    """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         c = args[0]
-        path = os.path.join(c.settings.dirs.preprocess, args[1])
+        path = os.path.join(c.settings.dirs.preprocess, args[1]) if args[1] is not None else None
         data = args[2]
 
-        if os.path.exists(path):
+        if path is not None and os.path.exists(path):
             instance = pickle.load(open(path, "rb"))
 
         else:
             instance = func(*args, **kwargs)
-            os.makedirs(c.settings.dirs.preprocess, exist_ok=True)
-            try:
-                pickle.dump(instance, open(path, "wb"), protocol=4)
-            except TypeError:
-                pass
 
-        return instance.transform(data)
+            if path is not None:
+                os.makedirs(c.settings.dirs.preprocess, exist_ok=True)
+                pickle.dump(instance, open(path, "wb"), protocol=4)
+
+        try:
+            return instance.transform(data)
+        except AttributeError:
+            return instance
 
     return wrapper
 
 
-def cached_preprocessed_data(func):
+def cached_preprocessed_data(func: Callable):
+    """
+    前処理されたデータがすでに存在すれば、それをロードする。
+    存在しなければ、 func で生成する。生成したデータは保存しておく。
+
+    Args:
+        func (Callable): 前処理を行う関数
+    """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         c = args[0]
@@ -54,8 +80,10 @@ def cached_preprocessed_data(func):
 
         else:
             array = func(*args, **kwargs)
-            os.makedirs(c.settings.dirs.input_minimal, exist_ok=True)
-            np.save(os.path.splitext(path)[0], array)
+
+            if isinstance(array, np.ndarray):
+                os.makedirs(c.settings.dirs.input_minimal, exist_ok=True)
+                np.save(os.path.splitext(path)[0], array)
 
         return array
 
@@ -75,36 +103,23 @@ def preprocess(c, df: pd.DataFrame):
     else:
         return df
 
+    pca_cols = [f"pca_{n}" for n in range(c.params.pca_n_components)]
+
     if "pca" in c.params.preprocess:
-        pca_array = apply_pca(c, f"pca_{c.params.pca_n_components}.npy", scaled)
+        df[pca_cols] = apply_pca(c, f"pca_{c.params.pca_n_components}.npy", scaled)
 
     elif "ppca" in c.params.preprocess:
-        pca_array = apply_ppca(c, f"ppca.npy", scaled)
+        df[pca_cols] = apply_ppca(c, f"ppca.npy", scaled)
 
     else:
         return df
 
-    pca_cols = [f"pca_{n}" for n in range(c.params.pca_n_components)]
-    df[pca_cols] = pca_array
-
-    num_bins = int(np.floor(1 + np.log2(len(df))))
-    df.loc[:, "bins"] = pd.cut(df[c.params.label_name], bins=num_bins, labels=False)
-
-    sampling_rate = 0.001
-    _, sampling_df = train_test_split(df, test_size=sampling_rate, stratify=df["bins"], random_state=c.params.seed)
+    sampling_array = sampling(c, f"sampling_pca{c.params.pca_n_components}.npy", df)
 
     if "nearest_neighbors" in c.params.preprocess:
-        neighbors = apply_nearest_neighbors(
-            c,
-            f"nearest_neighbors_pca{c.params.pca_n_components}_sample{str(sampling_rate).replace('.', '_')}.npy",
-            sampling_df[pca_cols].values,
-        )
+        _ = apply_nearest_neighbors(c, sampling_array)
     elif "faiss_nearest_neighbors" in c.params.preprocess:
-        neighbors = apply_faiss_nearest_neighbors(
-            c,
-            f"faiss_nearest_neighbors_pca{c.params.pca_n_components}_sample{str(sampling_rate).replace('.', '_')}.npy",
-            sampling_df[pca_cols].values,
-        )
+        _ = apply_faiss_nearest_neighbors(c, sampling_array)
 
     return df
 
@@ -156,16 +171,32 @@ def apply_ppca(c, out_path, array: np.ndarray):
 
 
 @cached_preprocessed_data
-def apply_nearest_neighbors(c, out_path, array: np.ndarray):
+def sampling(c, out_path, df: pd.DataFrame):
+    log.info("Sampling.")
+
+    pca_cols = [f"pca_{n}" for n in range(c.params.pca_n_components)]
+    num_bins = int(np.floor(1 + np.log2(len(df))))
+    df.loc[:, "bins"] = pd.cut(df[c.params.label_name], bins=num_bins, labels=False)
+
+    sampling_rate = 0.001
+    _, sampling_df = train_test_split(df, test_size=sampling_rate, stratify=df["bins"], random_state=c.params.seed)
+    return sampling_df[pca_cols].values
+
+
+def apply_nearest_neighbors(c, array: np.ndarray):
     log.info("Apply Nearest Neighbors.")
     return fit_scaler(c, f"nearest_neighbors_pca{c.params.pca_n_components}.pkl", array, NearestNeighbors)
 
 
-@cached_preprocessed_data
-def apply_faiss_nearest_neighbors(c, out_path, array: np.ndarray):
-    # TODO: faiss nn の保存 write_index
+def apply_faiss_nearest_neighbors(c, array: np.ndarray):
     log.info("Apply Faiss Nearest Neighbors.")
-    return fit_scaler(c, f"faiss_nearest_neighbors_pca{c.params.pca_n_components}.pkl", array, FaissKNeighbors)
+    scaler = fit_scaler(c, None, array, FaissKNeighbors)
+    index_cpu = faiss.index_gpu_to_cpu(scaler.index)
+    faiss.write_index(
+        index_cpu,
+        os.path.join(c.settings.dirs.preprocess, f"faiss_nearest_neighbors_pca{c.params.pca_n_components}.index"),
+    )
+    return scaler
 
 
 @cached_preprocess
@@ -175,6 +206,8 @@ def fit_scaler(c, scaler_path, data: np.ndarray, scaler_class: type, **kwargs):
     return scaler
 
 
+# https://gist.github.com/j-adamczyk/74ee808ffd53cd8545a49f185a908584
+# https://www.ariseanalytics.com/activities/report/20210304/
 class FaissKNeighbors:
     def __init__(self, k=5):
         self.res = faiss.StandardGpuResources()
