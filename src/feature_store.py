@@ -41,16 +41,16 @@ class Store:
         self,
         investments: Investments,
         training_array: Optional[NDArray[(Any, Any), Any]] = None,
-        sampling_array: Optional[NDArray[(Any, Any), Any]] = None,
-        scalers: Optional[List[Union[StandardScaler, PowerTransformer]]] = None,
-        pca: Optional[Union[PCA, PPCA]] = None,
+        # sampling_array: Optional[NDArray[(Any, Any), Any]] = None,
+        # scalers: Optional[List[Union[StandardScaler, PowerTransformer]]] = None,
+        # pca: Optional[Union[PCA, PPCA]] = None,
         nearest_neighbors: Optional[NearestNeighbors] = None,
     ):
         self.investments = investments
         self.training_array = training_array
-        self.sampling_array = sampling_array
-        self.scalers = scalers
-        self.pca = pca
+        # self.sampling_array = sampling_array
+        # self.scalers = scalers
+        # self.pca = pca
         self.nearest_neighbors = nearest_neighbors
 
     @classmethod
@@ -63,31 +63,28 @@ class Store:
     def train(cls, c: DictConfig) -> "Store":
         instance = cls.empty()
 
-        # training_array_path = os.path.join(c.settings.dirs.input_minimal, "train_min.npy")
-        sampling_array_path = os.path.join(c.settings.dirs.input_minimal, f"sampling_pca{c.params.pca_n_components}.npy")
+        training_array_path = os.path.join(c.settings.dirs.input_minimal, "train_min.npy")
+        # sampling_array_path = os.path.join(c.settings.dirs.input_minimal, f"sampling_pca{c.params.pca_n_components}.npy")
 
-        standard_scaler_0_path = os.path.join(c.settings.dirs.preprocess, "standard_scaler_f_0.pkl")
-        pca_path = os.path.join(c.settings.dirs.preprocess, f"pca_{c.params.pca_n_components}.pkl")
-        nearest_neighbors_path = os.path.join(
-            c.settings.dirs.preprocess,
-            f"faiss_nearest_neighbors_pca{c.params.pca_n_components}.index",
-        )
+        # standard_scaler_0_path = os.path.join(c.settings.dirs.preprocess, "standard_scaler_f_0.pkl")
+        # pca_path = os.path.join(c.settings.dirs.preprocess, f"pca_{c.params.pca_n_components}.pkl")
+        nearest_neighbors_path = os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index")
 
-        # if os.path.exists(training_array_path):
-        #     instance.training_array = np.load(training_array_path)
+        if os.path.exists(training_array_path):
+            instance.training_array = np.load(training_array_path)
 
-        if os.path.exists(sampling_array_path):
-            instance.sampling_array = np.load(sampling_array_path)
+        # if os.path.exists(sampling_array_path):
+        #     instance.sampling_array = np.load(sampling_array_path)
 
-        if os.path.exists(standard_scaler_0_path):
-            scalers = []
-            for n in range(300):
-                scaler = pickle.load(open(standard_scaler_0_path.replace("0", str(n)), "rb"))
-                scalers.append(scaler)
-            instance.scalers = scalers
+        # if os.path.exists(standard_scaler_0_path):
+        #     scalers = []
+        #     for n in range(300):
+        #         scaler = pickle.load(open(standard_scaler_0_path.replace("0", str(n)), "rb"))
+        #         scalers.append(scaler)
+        #     instance.scalers = scalers
 
-        if os.path.exists(pca_path):
-            instance.pca = pickle.load(open(pca_path, "rb"))
+        # if os.path.exists(pca_path):
+        #     instance.pca = pickle.load(open(pca_path, "rb"))
 
         if os.path.exists(nearest_neighbors_path):
             # instance.nearest_neighbors = pickle.load(open(nearest_neighbors_path, "rb"))

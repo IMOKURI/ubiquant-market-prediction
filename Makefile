@@ -7,10 +7,10 @@ GROUP := $(shell date '+%Y%m%d-%H%M')
 
 
 train: ## Run training
-	@for i in {0..7}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
+	@for i in {0..14}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
 
-train2: ## Run training section 2
-	@for i in {8..14}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
+# train2: ## Run training section 2
+# 	@for i in {8..14}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 2; done
 
 train-lgb: ## Run training by LightGBM
 	@nohup python train.py wandb.group=$(GROUP) settings.training_method="lightgbm" > /tmp/nohup_$(NOW).log &
@@ -49,7 +49,8 @@ clean-pyc: ## Remove python artifacts
 	@find . -name '__pycache__' -exec rm -fr {} +
 
 clean-training: ## Remove training artifacts
-	@rm -rf ../outputs ../multirun ../inputs/preprocess/*.pkl abort-training.flag
+	@rm -rf ../outputs ../multirun abort-training.flag
+	@rm -rf ../inputs/preprocess/*.{pkl,index}
 	@mv ../datasets/inputs/train_min.npy{,.tmp}
 	@rm -rf ../datasets/inputs/*.npy
 	@mv ../datasets/inputs/train_min.npy{.tmp,}

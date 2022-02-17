@@ -100,9 +100,6 @@ def preprocess(c, df: pd.DataFrame):
     elif "power_transformer" in c.params.preprocess:
         scaled = apply_power_transformer(c, "power_transformer.npy", df)
 
-    else:
-        return df
-
     pca_cols = [f"pca_{n}" for n in range(c.params.pca_n_components)]
 
     if "pca" in c.params.preprocess:
@@ -111,15 +108,12 @@ def preprocess(c, df: pd.DataFrame):
     elif "ppca" in c.params.preprocess:
         df[pca_cols] = apply_ppca(c, f"ppca.npy", scaled)
 
-    else:
-        return df
-
-    sampling_array = sampling(c, f"sampling_pca{c.params.pca_n_components}.npy", df)
-
     if "nearest_neighbors" in c.params.preprocess:
+        sampling_array = sampling(c, f"sampling_pca{c.params.pca_n_components}.npy", df)
         _ = apply_nearest_neighbors(c, sampling_array)
-    elif "faiss_nearest_neighbors" in c.params.preprocess:
-        _ = apply_faiss_nearest_neighbors(c, sampling_array)
+
+    if "faiss_ivfpq" in c.params.preprocess:
+        _ = apply_faiss_nearest_neighbors(c, df)
 
     return df
 
@@ -188,14 +182,12 @@ def apply_nearest_neighbors(c, array: np.ndarray):
     return fit_scaler(c, f"nearest_neighbors_pca{c.params.pca_n_components}.pkl", array, NearestNeighbors)
 
 
-def apply_faiss_nearest_neighbors(c, array: np.ndarray):
+def apply_faiss_nearest_neighbors(c, df: pd.DataFrame):
     log.info("Apply Faiss Nearest Neighbors.")
-    scaler = fit_scaler(c, None, array, FaissKNeighbors)
+    cols = [f"f_{n}" for n in range(300)]
+    scaler = fit_scaler(c, None, df[cols].values, FaissKNeighbors)
     index_cpu = faiss.index_gpu_to_cpu(scaler.index)
-    faiss.write_index(
-        index_cpu,
-        os.path.join(c.settings.dirs.preprocess, f"faiss_nearest_neighbors_pca{c.params.pca_n_components}.index"),
-    )
+    faiss.write_index(index_cpu, os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index"))
     return scaler
 
 
@@ -208,23 +200,34 @@ def fit_scaler(c, scaler_path, data: np.ndarray, scaler_class: type, **kwargs):
 
 # https://gist.github.com/j-adamczyk/74ee808ffd53cd8545a49f185a908584
 # https://www.ariseanalytics.com/activities/report/20210304/
+# https://rest-term.com/archives/3414/
 class FaissKNeighbors:
     def __init__(self, k=5):
-        self.res = faiss.StandardGpuResources()
-        self.flat_config = faiss.GpuIndexFlatConfig()
+        res = faiss.StandardGpuResources()
 
-        self.index = None
+        dim = 300  # input dim
+        nlist = 7000  # 4 * sqrt(num_data)
+        m = 20  # choice from [1, 2, 3, 4, 8, 12, 16, 20, 24, 28, 32, 48, 56, 64, 96] and dim ≡ 0 (mod m)
+        nbits = 8  # fixed for GPU
+        metric = faiss.METRIC_L2
+
+        config = faiss.GpuIndexIVFPQConfig()
+        config.usePrecomputedTables = True
+
+        self.index = faiss.GpuIndexIVFPQ(res, dim, nlist, m, nbits, metric, config)
         self.k = k
 
     def fit(self, X):
-        self.index = faiss.GpuIndexFlatL2(self.res, X.shape[1], self.flat_config)
+        self.index.train(np.ascontiguousarray(X, dtype=np.float32))
         self.index.add(np.ascontiguousarray(X, dtype=np.float32))
 
-    def kneighbors(self, X, n_neighbors: int = 0, return_distance: bool = True):
-        if n_neighbors <= 0:
-            n_neighbors = self.k
+    def kneighbors(self, X, k: int = 0, nprobe: int = 100, return_distance: bool = True):
+        if k <= 0:
+            k = self.k
 
-        distances, indices = self.index.search(np.ascontiguousarray(X, dtype=np.float32), k=n_neighbors)
+        self.index.nprobe = nprobe
+
+        distances, indices = self.index.search(np.ascontiguousarray(X, dtype=np.float32), k=k)
 
         if return_distance:
             return distances, indices

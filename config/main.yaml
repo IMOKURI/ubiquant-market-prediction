@@ -37,7 +37,7 @@ wandb:
 
 settings:
   print_freq: 100
-  gpus: "6,7"
+  gpus: "0,1,6,7"
 
   dirs:
     working: ${hydra:runtime.cwd}
@@ -65,12 +65,12 @@ params:
   seed: 440
   n_class: 1
   preprocess:  # []
-    - "standard_scaler"
+    # - "standard_scaler"
     # - "power_transformer"
-    - "pca"
+    # - "pca"
     # - "ppca"
     # - "nearest_neighbors"
-    - "faiss_nearest_neighbors"
+    - "faiss_ivfpq"
   pca_n_components: 50
   n_fold: 5
   skip_training: False
