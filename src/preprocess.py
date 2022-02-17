@@ -183,6 +183,9 @@ def apply_nearest_neighbors(c, array: np.ndarray):
 
 
 def apply_faiss_nearest_neighbors(c, df: pd.DataFrame):
+    if os.path.exists(os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index")):
+        return None
+
     log.info("Apply Faiss Nearest Neighbors.")
     cols = [f"f_{n}" for n in range(300)]
     scaler = fit_scaler(c, None, df[cols].values, FaissKNeighbors)

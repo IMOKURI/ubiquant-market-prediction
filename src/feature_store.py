@@ -88,8 +88,15 @@ class Store:
 
         if os.path.exists(nearest_neighbors_path):
             # instance.nearest_neighbors = pickle.load(open(nearest_neighbors_path, "rb"))
+
             index_cpu = faiss.read_index(nearest_neighbors_path)
-            instance.nearest_neighbors = faiss.index_cpu_to_all_gpus(index_cpu)
+
+            try:
+                devices = c.settings.gpus.split(",")
+                resources = [faiss.StandardGpuResources() for _ in devices]
+                instance.nearest_neighbors = faiss.index_cpu_to_gpu_multiple_py(resources, index_cpu, gpus=devices)
+            except Exception:
+                instance.nearest_neighbors = faiss.index_cpu_to_all_gpus(index_cpu)
 
         return instance
 
