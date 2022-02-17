@@ -50,6 +50,8 @@ clean-pyc: ## Remove python artifacts
 
 clean-training: ## Remove training artifacts
 	@rm -rf ../outputs ../multirun abort-training.flag
+
+clean-preprocess:  ## Remove preprocess artifacts
 	@rm -rf ../inputs/preprocess/*.{pkl,index}
 	@mv ../datasets/inputs/train_min.npy{,.tmp}
 	@rm -rf ../datasets/inputs/*.npy
