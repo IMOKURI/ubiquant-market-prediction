@@ -94,17 +94,20 @@ def preprocess(c, df: pd.DataFrame):
     if not c.params.preprocess:
         return df
 
-    if "standard_scaler" in c.params.preprocess:
-        scaled = apply_standard_scaler(c, "standard_scaled.npy", df)
+    training_features = save_training_features(c, "training_features.npy", df)
+    save_training_targets(c, "training_targets.npy", df)
 
+    if "standard_scaler" in c.params.preprocess:
+        scaled = apply_standard_scaler(c, "standard_scaled.npy", training_features)
     elif "power_transformer" in c.params.preprocess:
-        scaled = apply_power_transformer(c, "power_transformer.npy", df)
+        scaled = apply_power_transformer(c, "power_transformer.npy", training_features)
+    else:
+        scaled = training_features
 
     pca_cols = [f"pca_{n}" for n in range(c.params.pca_n_components)]
 
     if "pca" in c.params.preprocess:
         df[pca_cols] = apply_pca(c, f"pca_{c.params.pca_n_components}.npy", scaled)
-
     elif "ppca" in c.params.preprocess:
         df[pca_cols] = apply_ppca(c, f"ppca.npy", scaled)
 
@@ -113,39 +116,40 @@ def preprocess(c, df: pd.DataFrame):
         _ = apply_nearest_neighbors(c, sampling_array)
 
     if "faiss_ivfpq" in c.params.preprocess:
-        _ = apply_faiss_nearest_neighbors(c, df)
+        _ = apply_faiss_nearest_neighbors(c, training_features)
 
     return df
 
 
 @cached_preprocessed_data
-def apply_standard_scaler(c, out_path, df: pd.DataFrame):
-    log.info("Apply standard scaler.")
+def save_training_features(c, out_path, df: pd.DataFrame) -> np.ndarray:
     cols = [f"f_{n}" for n in range(300)]
-    scaled = np.zeros((len(df), len(cols)), dtype=np.float32)
+    return df[cols].values
 
-    start = time.time()
-    for n, data in enumerate(df[cols].values.T):
+
+@cached_preprocessed_data
+def save_training_targets(c, out_path, df: pd.DataFrame) -> np.ndarray:
+    return df[c.params.label_name].values
+
+
+@cached_preprocessed_data
+def apply_standard_scaler(c, out_path, array: np.ndarray) -> np.ndarray:
+    log.info("Apply standard scaler.")
+    scaled = np.zeros_like(array, dtype=np.float32)
+
+    for n, data in enumerate(array.T):
         scaled[:, n] = fit_scaler(c, f"standard_scaler_f_{n}.pkl", data.reshape(-1, 1), StandardScaler).squeeze()
-
-        if n % (len(cols) // 10) == 0 or n == (len(cols) - 1):
-            log.info(f"  Preprocess: [{n}/{len(cols)}] Elapsed {timeSince(start, float(n + 1) / len(cols)):s}")
 
     return scaled
 
 
 @cached_preprocessed_data
-def apply_power_transformer(c, out_path, df: pd.DataFrame):
+def apply_power_transformer(c, out_path, array: np.ndarray) -> np.ndarray:
     log.info("Apply power transformer.")
-    cols = [f"f_{n}" for n in range(300)]
-    scaled = np.zeros((len(df), len(cols)), dtype=np.float32)
+    scaled = np.zeros_like(array, dtype=np.float32)
 
-    start = time.time()
-    for n, data in enumerate(df[cols].values.T):
+    for n, data in enumerate(array.T):
         scaled[:, n] = fit_scaler(c, f"power_transformer_f_{n}.pkl", data.reshape(-1, 1), PowerTransformer).squeeze()
-
-        if n % (len(cols) // 10) == 0 or n == (len(cols) - 1):
-            log.info(f"  Preprocess: [{n}/{len(cols)}] Elapsed {timeSince(start, float(n + 1) / len(cols)):s}")
 
     return scaled
 
@@ -182,13 +186,12 @@ def apply_nearest_neighbors(c, array: np.ndarray):
     return fit_scaler(c, f"nearest_neighbors_pca{c.params.pca_n_components}.pkl", array, NearestNeighbors)
 
 
-def apply_faiss_nearest_neighbors(c, df: pd.DataFrame):
+def apply_faiss_nearest_neighbors(c, array: np.ndarray):
     if os.path.exists(os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index")):
         return None
 
     log.info("Apply Faiss Nearest Neighbors.")
-    cols = [f"f_{n}" for n in range(300)]
-    scaler = fit_scaler(c, None, df[cols].values, FaissKNeighbors)
+    scaler = fit_scaler(c, None, array, FaissKNeighbors)
     index_cpu = faiss.index_gpu_to_cpu(scaler.index)
     faiss.write_index(index_cpu, os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index"))
     return scaler

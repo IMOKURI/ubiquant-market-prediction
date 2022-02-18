@@ -53,9 +53,7 @@ clean-training: ## Remove training artifacts
 
 clean-preprocess:  ## Remove preprocess artifacts
 	@rm -rf ../inputs/preprocess/*.{pkl,index}
-	@mv ../datasets/inputs/train_min.npy{,.tmp}
 	@rm -rf ../datasets/inputs/*.npy
-	@mv ../datasets/inputs/train_min.npy{.tmp,}
 
 test: ## Run tests
 	@pytest
