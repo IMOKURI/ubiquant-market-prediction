@@ -29,8 +29,7 @@ def bench():
 
     with utils.timer("store.append"):
         for train_df, sample_prediction_df in iter_train:
-            for row in train_df.values:
-                store.append(row)
+            store.update(train_df.values)
 
             iter_train.predict(sample_prediction_df)
 
@@ -43,8 +42,7 @@ def bench():
 
     with utils.timer("store.append"):
         for test_df, sample_prediction_df in iter_test:
-            for row in test_df.values:
-                store.append(row)
+            store.update(test_df.values)
 
             env.predict(sample_prediction_df)
 

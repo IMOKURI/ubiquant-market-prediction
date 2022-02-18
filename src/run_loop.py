@@ -124,14 +124,7 @@ def train_fold(c, input, fold, device):
             gc.collect()
 
             if c.params.use_feature:
-                for row in train_df.values:
-                    store.append(row)
-
-                    investment_id_ = int(row[2])
-                    features_ = row[4:304].astype(np.float32)
-                    assert np.array_equal(
-                        store.investments[investment_id_].features.last_n(1).squeeze(), features_
-                    ), "Features are different before and after storing in the store"
+                store.update(train_df.values)
 
                 pred_df = make_feature(
                     train_df,
@@ -169,11 +162,9 @@ def train_fold(c, input, fold, device):
                 )
             avg_train_loss.update(train_loss, len(train_df))
 
-            if c.params.use_feature:
-                # 推論のときは pseudo label だけど、学習のときは ground truth で。
-                # for row in train_pred_df[["row_id", "target"]].values:
-                for row in train_df[["row_id", "target"]].values:
-                    store.append_post(row)
+            # if c.params.use_feature:
+            #     # 推論のときは pseudo label だけど、学習のときは ground truth で。
+            #     store.update_post(train_df[["row_id", "target"]].values)
 
             iter_train.predict(train_pred_df)
 
@@ -200,14 +191,7 @@ def train_fold(c, input, fold, device):
             gc.collect()
 
             if c.params.use_feature:
-                for row in valid_df.values:
-                    store.append(row)
-
-                    investment_id_ = int(row[2])
-                    features_ = row[4:304].astype(np.float32)
-                    assert np.array_equal(
-                        store.investments[investment_id_].features.last_n(1).squeeze(), features_
-                    ), "Features are different before and after storing in the store"
+                store.update(valid_df.values)
 
                 pred_df = make_feature(
                     valid_df,
@@ -238,11 +222,9 @@ def train_fold(c, input, fold, device):
 
             valid_pred_df[c.params.label_name] = preds
 
-            if c.params.use_feature:
-                # 推論のときは pseudo label だけど、学習のときは ground truth で。
-                # for row in valid_pred_df[["row_id", "target"]].values:
-                for row in valid_df[["row_id", "target"]].values:
-                    store.append_post(row)
+            # if c.params.use_feature:
+            #     # 推論のときは pseudo label だけど、学習のときは ground truth で。
+            #     store.update_post(valid_df[["row_id", "target"]].values)
 
             try:
                 iter_valid.predict(valid_pred_df)
