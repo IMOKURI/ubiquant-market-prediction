@@ -10,14 +10,15 @@
   "enable_internet": false,
   "keywords": [],
   "dataset_sources": [
-    "robikscube/ubiquant-parquet",
-    "speeddemon/hydracore105",
-    "imokuri/ump-models",
+    "astarikov/faissgpu17",
     "imokuri/nptyping",
     "imokuri/typish",
-    "imokuri/ump-train-minimal",
+    "imokuri/ump-models",
     "imokuri/ump-preprocess",
-    "ryati131457/pytorchtabnet"
+    "imokuri/ump-train-minimal",
+    "robikscube/ubiquant-parquet",
+    "ryati131457/pytorchtabnet",
+    "speeddemon/hydracore105"
   ],
   "kernel_sources": [],
   "competition_sources": [
