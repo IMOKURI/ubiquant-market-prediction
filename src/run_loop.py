@@ -21,6 +21,7 @@ from .make_feature import make_feature
 from .make_fold import train_test_split
 from .make_loss import make_criterion, make_optimizer, make_scheduler
 from .make_model import make_model
+from .preprocess import apply_faiss_nearest_neighbors, save_training_features, save_training_targets
 from .run_epoch import inference_epoch, train_epoch, validate_epoch
 from .time_series_api import TimeSeriesAPI
 from .utils import AverageMeter, timeSince
@@ -78,12 +79,19 @@ def train_fold_lightgbm(c, df, fold):
 
 def train_fold(c, input, fold, device):
     df = input.train
+    train_folds, valid_folds = train_test_split(c, df, fold)
+
+    # ====================================================
+    # Preprocess
+    # ====================================================
+    cols = [f"f_{n}" for n in range(300)]
+    save_training_features(c, f"training_features_{fold}.npy", train_folds)
+    save_training_targets(c, f"training_targets_{fold}.npy", train_folds)
+    apply_faiss_nearest_neighbors(c, f"faiss_ivfpq_{fold}.index", train_folds[cols].values)
 
     # ====================================================
     # Data Loader
     # ====================================================
-    train_folds, valid_folds = train_test_split(c, df, fold)
-
     train_ds = make_dataset(c, train_folds)
     # valid_ds = make_dataset(c, valid_folds)
 
@@ -112,7 +120,7 @@ def train_fold(c, input, fold, device):
         # Training
         # ====================================================
         # store = Store.empty()
-        store = Store.train(c)
+        store = Store.train(c, fold)
         iter_train = TimeSeriesAPI(train_folds, scoring=False)
         avg_train_loss = AverageMeter()
 
@@ -179,7 +187,7 @@ def train_fold(c, input, fold, device):
         # Validation
         # ====================================================
         # store = Store.empty()
-        store = Store.train(c)
+        store = Store.train(c, fold)
         iter_valid = TimeSeriesAPI(valid_folds)
         avg_val_loss = AverageMeter()
 

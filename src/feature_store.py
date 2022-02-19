@@ -62,16 +62,24 @@ class Store:
         return cls(investments)
 
     @classmethod
-    def train(cls, c: DictConfig) -> "Store":
+    def train(cls, c: DictConfig, training_fold: Optional[int] = None) -> "Store":
         instance = cls.empty()
 
-        training_features_path = os.path.join(c.settings.dirs.input_minimal, "training_features.npy")
-        training_targets_path = os.path.join(c.settings.dirs.input_minimal, "training_targets.npy")
         # sampling_array_path = os.path.join(c.settings.dirs.input_minimal, f"sampling_pca{c.params.pca_n_components}.npy")
 
         # standard_scaler_0_path = os.path.join(c.settings.dirs.preprocess, "standard_scaler_f_0.pkl")
         # pca_path = os.path.join(c.settings.dirs.preprocess, f"pca_{c.params.pca_n_components}.pkl")
-        nearest_neighbors_path = os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index")
+
+        if training_fold is None:
+            training_features_path = os.path.join(c.settings.dirs.input_minimal, "training_features.npy")
+            training_targets_path = os.path.join(c.settings.dirs.input_minimal, "training_targets.npy")
+            nearest_neighbors_path = os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index")
+        else:
+            training_features_path = os.path.join(
+                c.settings.dirs.input_minimal, f"training_features_{training_fold}.npy"
+            )
+            training_targets_path = os.path.join(c.settings.dirs.input_minimal, f"training_targets_{training_fold}.npy")
+            nearest_neighbors_path = os.path.join(c.settings.dirs.preprocess, f"faiss_ivfpq_{training_fold}.index")
 
         if os.path.exists(training_features_path):
             instance.training_features = np.load(training_features_path)

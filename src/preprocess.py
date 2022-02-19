@@ -116,7 +116,7 @@ def preprocess(c, df: pd.DataFrame):
         _ = apply_nearest_neighbors(c, sampling_array)
 
     if "faiss_ivfpq" in c.params.preprocess:
-        _ = apply_faiss_nearest_neighbors(c, training_features)
+        _ = apply_faiss_nearest_neighbors(c, "faiss_ivfpq.index", training_features)
 
     return df
 
@@ -186,14 +186,14 @@ def apply_nearest_neighbors(c, array: np.ndarray):
     return fit_scaler(c, f"nearest_neighbors_pca{c.params.pca_n_components}.pkl", array, NearestNeighbors)
 
 
-def apply_faiss_nearest_neighbors(c, array: np.ndarray):
-    if os.path.exists(os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index")):
+def apply_faiss_nearest_neighbors(c, out_path, array: np.ndarray):
+    if os.path.exists(os.path.join(c.settings.dirs.preprocess, out_path)):
         return None
 
     log.info("Apply Faiss Nearest Neighbors.")
     scaler = fit_scaler(c, None, array, FaissKNeighbors)
     index_cpu = faiss.index_gpu_to_cpu(scaler.index)
-    faiss.write_index(index_cpu, os.path.join(c.settings.dirs.preprocess, "faiss_ivfpq.index"))
+    faiss.write_index(index_cpu, os.path.join(c.settings.dirs.preprocess, out_path))
     return scaler
 
 
