@@ -71,3 +71,18 @@ def f303_nearest_neighbors_target_max(ctx: Context) -> Dict[str, float]:
         features[f"nn_target_max_{n}"] = np.nanmax(nn_targets[:n])
 
     return features
+
+
+@feature([f"nn_target_median_{n}" for n in [2, 3, 5, 10, 20, 40, 80, 150]])
+def f304_nearest_neighbors_target_median(ctx: Context) -> Dict[str, float]:
+    latest = ctx.store.investments[ctx.investment_id].features.last_n(1)
+
+    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=150)
+
+    nn_targets = ctx.store.training_targets[nn_index.squeeze()].squeeze()
+
+    features = {}
+    for n in [2, 3, 5, 10, 20, 40, 80, 150]:
+        features[f"nn_target_median_{n}"] = np.nanmedian(nn_targets[:n])
+
+    return features

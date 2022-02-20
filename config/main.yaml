@@ -89,7 +89,8 @@ params:
     - "f000"  # f000_initial_features
     - "f100"  # f100_vs_same_time_id_average
     # - "f300"  # f300_vs_nearest_neighbors_average
-    - "f301"  # f301_nearest_neighbors_target
+    # - "f301"  # f301_nearest_neighbors_target (mean)
+    - "f304"  # f304_nearest_neighbors_target_median
     - "f302"  # f302_nearest_neighbors_target_min
     - "f303"  # f303_nearest_neighbors_target_max
     # - "f200"  # f200_lag_last_features
