@@ -38,7 +38,6 @@ wandb:
 settings:
   print_freq: 100
   gpus: "1,2,6,7"
-  # gpus: "0,3,4,5"
 
   dirs:
     working: ${hydra:runtime.cwd}
@@ -89,7 +88,7 @@ params:
     - "f000"  # f000_initial_features
     - "f100"  # f100_vs_same_time_id_average
     # - "f300"  # f300_vs_nearest_neighbors_average
-    # - "f301"  # f301_nearest_neighbors_target (mean)
+    - "f301"  # f301_nearest_neighbors_target (mean)
     - "f304"  # f304_nearest_neighbors_target_median
     - "f302"  # f302_nearest_neighbors_target_min
     - "f303"  # f303_nearest_neighbors_target_max
@@ -97,7 +96,7 @@ params:
     # - "f901"  # f901_pseudo_last_target
   dataset: ump_1
   model: ump_1dcnn
-  model_input: 624
+  model_input: 632
   model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []

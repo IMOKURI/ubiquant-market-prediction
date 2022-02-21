@@ -28,61 +28,61 @@ def f300_vs_nearest_neighbors_average(ctx: Context) -> Dict[str, float]:
     return {f"vs_nn_avg_{n}": v for n, v in enumerate(latest.squeeze() - avg)}
 
 
-@feature([f"nn_target_{n}" for n in [2, 3, 5, 10, 20, 40, 80, 150]])
+@feature([f"nn_target_{n}" for n in [16, 32, 64, 128, 256, 512, 1024, 2048]])
 def f301_nearest_neighbors_target(ctx: Context) -> Dict[str, float]:
     latest = ctx.store.investments[ctx.investment_id].features.last_n(1)
 
-    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=150)
+    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=2048)
 
     nn_targets = ctx.store.training_targets[nn_index.squeeze()].squeeze()
 
     features = {}
-    for n in [2, 3, 5, 10, 20, 40, 80, 150]:
+    for n in [16, 32, 64, 128, 256, 512, 1024, 2048]:
         features[f"nn_target_{n}"] = np.nanmean(nn_targets[:n])
 
     return features
 
 
-@feature([f"nn_target_min_{n}" for n in [2, 3, 5, 10, 20, 40, 80, 150]])
+@feature([f"nn_target_min_{n}" for n in [16, 32, 64, 128, 256, 512, 1024, 2048]])
 def f302_nearest_neighbors_target_min(ctx: Context) -> Dict[str, float]:
     latest = ctx.store.investments[ctx.investment_id].features.last_n(1)
 
-    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=150)
+    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=2048)
 
     nn_targets = ctx.store.training_targets[nn_index.squeeze()].squeeze()
 
     features = {}
-    for n in [2, 3, 5, 10, 20, 40, 80, 150]:
+    for n in [16, 32, 64, 128, 256, 512, 1024, 2048]:
         features[f"nn_target_min_{n}"] = np.nanmin(nn_targets[:n])
 
     return features
 
 
-@feature([f"nn_target_max_{n}" for n in [2, 3, 5, 10, 20, 40, 80, 150]])
+@feature([f"nn_target_max_{n}" for n in [16, 32, 64, 128, 256, 512, 1024, 2048]])
 def f303_nearest_neighbors_target_max(ctx: Context) -> Dict[str, float]:
     latest = ctx.store.investments[ctx.investment_id].features.last_n(1)
 
-    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=150)
+    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=2048)
 
     nn_targets = ctx.store.training_targets[nn_index.squeeze()].squeeze()
 
     features = {}
-    for n in [2, 3, 5, 10, 20, 40, 80, 150]:
+    for n in [16, 32, 64, 128, 256, 512, 1024, 2048]:
         features[f"nn_target_max_{n}"] = np.nanmax(nn_targets[:n])
 
     return features
 
 
-@feature([f"nn_target_median_{n}" for n in [2, 3, 5, 10, 20, 40, 80, 150]])
+@feature([f"nn_target_median_{n}" for n in [16, 32, 64, 128, 256, 512, 1024, 2048]])
 def f304_nearest_neighbors_target_median(ctx: Context) -> Dict[str, float]:
     latest = ctx.store.investments[ctx.investment_id].features.last_n(1)
 
-    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=150)
+    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=2048)
 
     nn_targets = ctx.store.training_targets[nn_index.squeeze()].squeeze()
 
     features = {}
-    for n in [2, 3, 5, 10, 20, 40, 80, 150]:
+    for n in [16, 32, 64, 128, 256, 512, 1024, 2048]:
         features[f"nn_target_median_{n}"] = np.nanmedian(nn_targets[:n])
 
     return features
