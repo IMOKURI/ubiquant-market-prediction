@@ -31,10 +31,15 @@ def make_dataset_lightgbm(c, train_df, valid_df):
 
 
 def make_dataset_general(c, train_df, valid_df):
-    train_labels = train_df[c.params.label_name].values
-    valid_labels = valid_df[c.params.label_name].values
+    if c.params.n_class == 1:
+        labels = [c.params.label_name]
+    else:
+        labels = [f"{c.params.label_name}_{n}" for n in range(c.params.n_class)]
 
-    for col in ["row_id", "investment_id", "time_id", c.params.label_name, "fold", "group_fold", "time_fold"]:
+    train_labels = train_df[labels].values
+    valid_labels = valid_df[labels].values
+
+    for col in ["row_id", "investment_id", "time_id", "fold", "group_fold", "time_fold", c.params.label_name] + labels:
         try:
             train_df = train_df.drop(col, axis=1)
             valid_df = valid_df.drop(col, axis=1)
@@ -64,9 +69,22 @@ class BaseDataset(Dataset):
         # self.df = df
         self.use_label = label
         if self.use_label:
-            self.labels = df[c.params.label_name].values
+            if c.params.n_class == 1:
+                labels = [c.params.label_name]
+            else:
+                labels = [f"{c.params.label_name}_{n}" for n in range(c.params.n_class)]
 
-        for col in ["row_id", "investment_id", "time_id", c.params.label_name, "fold", "group_fold", "time_fold"]:
+            self.labels = df[labels].values
+
+        for col in [
+            "row_id",
+            "investment_id",
+            "time_id",
+            "fold",
+            "group_fold",
+            "time_fold",
+            c.params.label_name,
+        ] + labels:
             try:
                 df = df.drop(col, axis=1)
             except KeyError:

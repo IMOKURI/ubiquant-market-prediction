@@ -102,19 +102,21 @@ class LSTMModel(nn.Module):
 
         self.head = nn.Linear(self.hidden_size, 1)
 
-    def forward(self, x, h_c=None):
+    # def forward(self, x, h_c=None):
+    def forward(self, x):
         with amp.autocast(enabled=self.amp):
-            x = self.bn_1(x)
+            x = self.bn_1(x.view(-1, 10, 300))
 
-            if h_c is None:
-                x, h_c = self.lstm(x)
-            else:
-                x, h_c = self.lstm(x, h_c)
+            # if h_c is None:
+            #     x, h_c = self.lstm(x)
+            # else:
+            #     x, h_c = self.lstm(x, h_c)
+            x, _ = self.lstm(x)
 
-            x = self.head(x)
-            x = x[:, -1, :].view(-1, 1)  # Use last sequence output
+            x = self.head(x).squeeze()
+            # x = x[:, -1, :].view(-1, 1)  # Use last sequence output
 
-        return x, h_c
+        return x  # , h_c
 
 
 # https://www.kaggle.com/c/lish-moa/discussion/202256

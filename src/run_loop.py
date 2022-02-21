@@ -92,7 +92,7 @@ def train_fold(c, input, fold, device):
     # ====================================================
     # Data Loader
     # ====================================================
-    train_ds = make_dataset(c, train_folds)
+    # train_ds = make_dataset(c, train_folds)
     # valid_ds = make_dataset(c, valid_folds)
 
     # train_loader = make_dataloader(c, train_ds, shuffle=True, drop_last=True)
@@ -106,7 +106,8 @@ def train_fold(c, input, fold, device):
     criterion = make_criterion(c)
     optimizer = make_optimizer(c, model)
     scaler = amp.GradScaler(enabled=c.settings.amp)
-    scheduler = make_scheduler(c, optimizer, train_ds)
+    # scheduler = make_scheduler(c, optimizer, train_ds)
+    scheduler = make_scheduler(c, optimizer, df)
 
     es = EarlyStopping(c=c, fold=fold)
 

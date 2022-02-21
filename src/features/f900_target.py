@@ -15,3 +15,10 @@ def f901_pseudo_last_target(ctx: Context) -> Dict:
     return {
         "pseudo_last_target": ctx.store.investments[ctx.investment_id].pseudo_targets.last_n(1)[0][0],
     }
+
+
+@feature([f"target_{n}" for n in range(10)])
+def f902_last10_target(ctx: Context) -> Dict:
+    return {
+        f"target_{n}": v for n, v in enumerate(ctx.store.investments[ctx.investment_id].targets.last_n(10).squeeze())
+    }
