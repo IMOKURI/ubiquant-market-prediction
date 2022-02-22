@@ -105,7 +105,7 @@ class LSTMModel(nn.Module):
     # def forward(self, x, h_c=None):
     def forward(self, x):
         with amp.autocast(enabled=self.amp):
-            x = self.bn_1(x.view(-1, 10, 300))
+            x = self.bn_1(x.view(-1, self.window_size, self.input_size))
 
             # if h_c is None:
             #     x, h_c = self.lstm(x)
@@ -113,7 +113,7 @@ class LSTMModel(nn.Module):
             #     x, h_c = self.lstm(x, h_c)
             x, _ = self.lstm(x)
 
-            x = self.head(x).squeeze()
+            x = self.head(x).view(-1, self.window_size)
             # x = x[:, -1, :].view(-1, 1)  # Use last sequence output
 
         return x  # , h_c
