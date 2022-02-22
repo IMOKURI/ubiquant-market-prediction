@@ -89,8 +89,7 @@ def validate_epoch(c, valid_loader, model, criterion, device):
         # with torch.inference_mode():
         with torch.no_grad():
             # y_preds = model(images)
-            # y_preds = model(images).squeeze()
-            y_preds = model(features).squeeze()
+            y_preds = model(features)
 
         loss = criterion(y_preds, labels)
         losses.update(loss.item(), batch_size)
@@ -98,7 +97,7 @@ def validate_epoch(c, valid_loader, model, criterion, device):
         begin = step * c.params.batch_size
         end = begin + batch_size
         if c.params.n_class == 1:
-            preds[begin:end] = y_preds.to("cpu").numpy()
+            preds[begin:end] = y_preds.squeeze().to("cpu").numpy()
         elif c.params.n_class > 1:
             # preds[begin:end] = y_preds.softmax(1).to("cpu").numpy()
             preds[begin:end] = y_preds[:, -1].squeeze().to("cpu").numpy()
@@ -130,13 +129,12 @@ def inference_epoch(c, inference_loader, model, device):
         # with torch.inference_mode():
         with torch.no_grad():
             # y_preds = model(images)
-            # y_preds = model(images).squeeze()
-            y_preds = model(features).squeeze()
+            y_preds = model(features)
 
         begin = step * c.params.batch_size
         end = begin + batch_size
         if c.params.n_class == 1:
-            preds[begin:end] = y_preds.to("cpu").numpy()
+            preds[begin:end] = y_preds.squeeze().to("cpu").numpy()
         elif c.params.n_class > 1:
             # preds[begin:end] = y_preds.softmax(1).to("cpu").numpy()
             preds[begin:end] = y_preds[:, -1].squeeze().to("cpu").numpy()
