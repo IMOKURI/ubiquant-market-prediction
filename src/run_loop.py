@@ -283,9 +283,10 @@ def train_fold(c, input, fold, device):
 
     if c.params.n_class == 1:
         valid_folds["preds"] = es.best_preds
-    # elif c.params.n_class > 1:
-    #     valid_folds[[str(c) for c in range(c.params.n_class)]] = es.best_preds
-    #     valid_folds["preds"] = es.best_preds.argmax(1)
+    elif c.params.n_class > 1:
+        valid_folds["preds"] = es.best_preds
+        # valid_folds[[str(c) for c in range(c.params.n_class)]] = es.best_preds
+        # valid_folds["preds"] = es.best_preds.argmax(1)
     else:
         raise Exception("Invalid n_class.")
 

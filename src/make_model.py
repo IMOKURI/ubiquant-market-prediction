@@ -1,7 +1,7 @@
-import joblib
 import logging
 import os
 
+import joblib
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
@@ -56,21 +56,26 @@ class MLPModel(nn.Module):
         super().__init__()
         self.amp = c.settings.amp
         self.dim = c.params.model_input
-        self.layers = 4
 
         self.bn_1 = nn.BatchNorm1d(self.dim)
 
-        self.fcs = nn.ModuleList([nn.Linear(self.dim, self.dim) for _ in range(self.layers)])
+        self.fc_1 = nn.Linear(self.dim, self.dim)
+        self.fc_2 = nn.Linear(self.dim, self.dim // 2)
+        self.fc_3 = nn.Linear(self.dim // 2, self.dim // 4)
+        self.fc_4 = nn.Linear(self.dim // 4, self.dim // 8)
 
-        self.head = nn.Linear(self.dim, 1)
+        self.head = nn.Linear(self.dim // 8, 1)
 
     def forward(self, x):
         with amp.autocast(enabled=self.amp):
             x = self.bn_1(x)
-            for fc in self.fcs:
-                x = swish(fc(x))
 
-            x = self.head(x)
+            x = swish(self.fc_1(x))
+            x = swish(self.fc_2(x))
+            x = swish(self.fc_3(x))
+            x = swish(self.fc_4(x))
+
+            x = self.head(x).squeeze(1)
 
         return x
 
@@ -122,6 +127,10 @@ class LSTMModel(nn.Module):
         return x  # , h_c
 
 
+def weight_norm(layer, dim=None, enabled=True):
+    return nn.utils.weight_norm(layer, dim=dim) if enabled else layer
+
+
 # https://www.kaggle.com/c/lish-moa/discussion/202256
 # https://github.com/baosenguo/Kaggle-MoA-2nd-Place-Solution/blob/main/training/1d-cnn-train.ipynb
 class OneDCNNModel(nn.Module):
@@ -130,8 +139,8 @@ class OneDCNNModel(nn.Module):
         self.amp = c.settings.amp
         self.input = c.params.model_input
 
-        self.hidden_size = 1024
-        self.ch_1 = 128
+        self.hidden_size = 2048
+        self.ch_1 = 256
         self.ch_2 = 384
         self.ch_3 = 384
 
@@ -139,37 +148,29 @@ class OneDCNNModel(nn.Module):
         self.ch_po_2 = int(self.hidden_size / self.ch_1 / 2 / 2) * self.ch_3
 
         self.expand = nn.Sequential(
-            nn.BatchNorm1d(self.input), nn.utils.weight_norm(nn.Linear(self.input, self.hidden_size)), nn.CELU(0.06)
+            nn.BatchNorm1d(self.input), weight_norm(nn.Linear(self.input, self.hidden_size)), nn.CELU(0.06)
         )
 
         self.conv1 = nn.Sequential(
             nn.BatchNorm1d(self.ch_1),
             nn.Dropout(0.1),
-            nn.utils.weight_norm(
-                nn.Conv1d(self.ch_1, self.ch_2, kernel_size=5, stride=1, padding=2, bias=False), dim=None
-            ),
+            weight_norm(nn.Conv1d(self.ch_1, self.ch_2, kernel_size=5, stride=1, padding=2, bias=False)),
             nn.ReLU(),
             nn.AdaptiveAvgPool1d(output_size=self.ch_po_1),
             nn.BatchNorm1d(self.ch_2),
             nn.Dropout(0.1),
-            nn.utils.weight_norm(
-                nn.Conv1d(self.ch_2, self.ch_2, kernel_size=3, stride=1, padding=1, bias=True), dim=None
-            ),
+            weight_norm(nn.Conv1d(self.ch_2, self.ch_2, kernel_size=3, stride=1, padding=1, bias=True)),
             nn.ReLU(),
         )
 
         self.conv2 = nn.Sequential(
             nn.BatchNorm1d(self.ch_2),
             nn.Dropout(0.2),
-            nn.utils.weight_norm(
-                nn.Conv1d(self.ch_2, self.ch_2, kernel_size=3, stride=1, padding=1, bias=True), dim=None
-            ),
+            weight_norm(nn.Conv1d(self.ch_2, self.ch_2, kernel_size=3, stride=1, padding=1, bias=True)),
             nn.ReLU(),
             nn.BatchNorm1d(self.ch_2),
             nn.Dropout(0.2),
-            nn.utils.weight_norm(
-                nn.Conv1d(self.ch_2, self.ch_3, kernel_size=5, stride=1, padding=2, bias=True), dim=None
-            ),
+            weight_norm(nn.Conv1d(self.ch_2, self.ch_3, kernel_size=5, stride=1, padding=2, bias=True)),
             nn.ReLU(),
         )
 
@@ -193,6 +194,6 @@ class OneDCNNModel(nn.Module):
             x = self.max_po_c2(x)
             x = self.flt(x)
 
-            x = self.head(x)
+            x = self.head(x).squeeze(1)
 
         return x

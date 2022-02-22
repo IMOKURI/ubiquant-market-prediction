@@ -71,10 +71,12 @@ class BaseDataset(Dataset):
         if self.use_label:
             if c.params.n_class == 1:
                 labels = [c.params.label_name]
+                self.labels = df[c.params.label_name].values
             else:
                 labels = [f"{c.params.label_name}_{n}" for n in range(c.params.n_class)]
-
-            self.labels = df[labels].values
+                self.labels = df[labels].values
+        else:
+            labels = []
 
         for col in [
             "row_id",

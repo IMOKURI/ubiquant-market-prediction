@@ -25,8 +25,7 @@ def train_epoch(c, train_loader, model, criterion, optimizer, scheduler, scaler,
 
         with amp.autocast(enabled=c.settings.amp):
             # y_preds = model(images)
-            # y_preds = model(images).squeeze()
-            y_preds = model(features).squeeze()
+            y_preds = model(features)
 
             loss = criterion(y_preds, labels)
 

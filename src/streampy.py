@@ -27,6 +27,7 @@ class StreamPy:
             default_value (int): Value to be inserted when an exception is raised.
         """
         self.values = values
+        self.dtype = values.dtype
         self.length = length
         self.default_value = default_value
 
@@ -73,7 +74,7 @@ class StreamPy:
         self.values[self.length : self.length + n_row] = array
         self.length += n_row
 
-    def last_n(self, n: int) -> np.ndarray:
+    def last_n(self, n: int) -> NDArray[(Any, Any), Any]:
         res = self.values[max(self.length - n, 0) : self.length]
 
         if len(res) == n:
