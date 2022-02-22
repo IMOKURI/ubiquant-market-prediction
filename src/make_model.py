@@ -80,6 +80,9 @@ class LSTMModel(nn.Module):
     LSTM を DataParallel で使うときの注意。
     hidden と cell の shape の batch_size が GPU数で分割された値になってしまう。
     https://discuss.pytorch.org/t/dataparallel-lstm-gru-wrong-hidden-batch-size-8-gpus/6701
+
+    Cell state: Long term memory of the model, only part of LSTM models
+    Hidden state: Working memory, part of LSTM and RNN models
     """
 
     def __init__(self, c):
@@ -93,7 +96,8 @@ class LSTMModel(nn.Module):
 
         self.bn_1 = nn.BatchNorm1d(self.window_size)
 
-        self.lstm = nn.LSTM(self.input_size, self.hidden_size, batch_first=True)
+        self.rnn = nn.LSTM(self.input_size, self.hidden_size, batch_first=True)
+        # self.rnn = nn.GRU(self.input_size, self.hidden_size, batch_first=True)
 
         # num_gpu = len(c.settings.gpus.split(","))
         # hidden = torch.zeros(1, self.batch_size // num_gpu, self.hidden_size)
@@ -111,10 +115,9 @@ class LSTMModel(nn.Module):
             #     x, h_c = self.lstm(x)
             # else:
             #     x, h_c = self.lstm(x, h_c)
-            x, _ = self.lstm(x)
+            x, _ = self.rnn(x)
 
             x = self.head(x).view(-1, self.window_size)
-            # x = x[:, -1, :].view(-1, 1)  # Use last sequence output
 
         return x  # , h_c
 
