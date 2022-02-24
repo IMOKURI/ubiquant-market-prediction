@@ -23,11 +23,10 @@ log = logging.getLogger(__name__)
 
 # TODO:
 # デコレーターをもうちょっとなんとかしたい (アンチパターンな気がする)
-# - デコレーターと 引数の関数 func とで戻り値の type が変わってしまっている
 # - 引数の関数 func の引数が、 func の中では使われていない
 
 
-def cached_preprocess(func: Callable):
+def load_or_fit(func: Callable):
     """
     前処理を行うクラスがすでに保存されていれば、それをロードする。
     保存されていなければ、 func で生成、学習する。
@@ -41,7 +40,6 @@ def cached_preprocess(func: Callable):
     def wrapper(*args, **kwargs):
         c = args[0]
         path = os.path.join(c.settings.dirs.preprocess, args[1]) if args[1] is not None else None
-        data = args[2]
 
         if path is not None and os.path.exists(path):
             instance = pickle.load(open(path, "rb"))
@@ -53,15 +51,12 @@ def cached_preprocess(func: Callable):
                 os.makedirs(c.settings.dirs.preprocess, exist_ok=True)
                 pickle.dump(instance, open(path, "wb"), protocol=4)
 
-        try:
-            return instance.transform(data)
-        except AttributeError:
-            return instance
+        return instance
 
     return wrapper
 
 
-def cached_preprocessed_data(func: Callable):
+def load_or_transform(func: Callable):
     """
     前処理されたデータがすでに存在すれば、それをロードする。
     存在しなければ、 func で生成する。生成したデータは保存しておく。
@@ -86,7 +81,6 @@ def cached_preprocessed_data(func: Callable):
                 np.save(os.path.splitext(path)[0], array)
 
         return array
-
     return wrapper
 
 
@@ -121,54 +115,58 @@ def preprocess(c, df: pd.DataFrame):
     return df
 
 
-@cached_preprocessed_data
+@load_or_transform
 def save_training_features(c, out_path, df: pd.DataFrame) -> np.ndarray:
     cols = [f"f_{n}" for n in range(300)]
     return df[cols].values
 
 
-@cached_preprocessed_data
+@load_or_transform
 def save_training_targets(c, out_path, df: pd.DataFrame) -> np.ndarray:
     return df[c.params.label_name].values
 
 
-@cached_preprocessed_data
+@load_or_transform
 def apply_standard_scaler(c, out_path, array: np.ndarray) -> np.ndarray:
     log.info("Apply standard scaler.")
     scaled = np.zeros_like(array, dtype=np.float32)
 
     for n, data in enumerate(array.T):
-        scaled[:, n] = fit_scaler(c, f"standard_scaler_f_{n}.pkl", data.reshape(-1, 1), StandardScaler).squeeze()
+        instance = fit_scaler(c, f"standard_scaler_f_{n}.pkl", data.reshape(-1, 1), StandardScaler)
+        scaled[:, n] = instance.transform(data.reshape(-1, 1)).squeeze()
 
     return scaled
 
 
-@cached_preprocessed_data
+@load_or_transform
 def apply_power_transformer(c, out_path, array: np.ndarray) -> np.ndarray:
     log.info("Apply power transformer.")
     scaled = np.zeros_like(array, dtype=np.float32)
 
     for n, data in enumerate(array.T):
-        scaled[:, n] = fit_scaler(c, f"power_transformer_f_{n}.pkl", data.reshape(-1, 1), PowerTransformer).squeeze()
+        instance = fit_scaler(c, f"power_transformer_f_{n}.pkl", data.reshape(-1, 1), PowerTransformer)
+        scaled[:, n] = instance.transform(data.reshape(-1, 1)).squeeze()
 
     return scaled
 
 
-@cached_preprocessed_data
+@load_or_transform
 def apply_pca(c, out_path, array: np.ndarray):
     log.info("Apply PCA.")
-    return fit_scaler(
+    instance = fit_scaler(
         c, f"pca_{c.params.pca_n_components}.pkl", array, PCA, n_components=c.params.pca_n_components, tol=1e-4
     )
+    return instance.transform(array)
 
 
-@cached_preprocessed_data
+@load_or_transform
 def apply_ppca(c, out_path, array: np.ndarray):
     log.info("Apply PPCA.")
-    return fit_scaler(c, f"ppca.pkl", array, PPCA)
+    instance = fit_scaler(c, f"ppca.pkl", array, PPCA)
+    return instance.transform(array)
 
 
-@cached_preprocessed_data
+@load_or_transform
 def sampling(c, out_path, df: pd.DataFrame):
     log.info("Sampling.")
 
@@ -183,7 +181,8 @@ def sampling(c, out_path, df: pd.DataFrame):
 
 def apply_nearest_neighbors(c, array: np.ndarray):
     log.info("Apply Nearest Neighbors.")
-    return fit_scaler(c, f"nearest_neighbors_pca{c.params.pca_n_components}.pkl", array, NearestNeighbors)
+    instance = fit_scaler(c, f"nearest_neighbors_pca{c.params.pca_n_components}.pkl", array, NearestNeighbors)
+    return instance
 
 
 def apply_faiss_nearest_neighbors(c, out_path, array: np.ndarray):
@@ -197,7 +196,7 @@ def apply_faiss_nearest_neighbors(c, out_path, array: np.ndarray):
     return scaler
 
 
-@cached_preprocess
+@load_or_fit
 def fit_scaler(c, scaler_path, data: np.ndarray, scaler_class: type, **kwargs):
     scaler = scaler_class(**kwargs)
     scaler.fit(data)
