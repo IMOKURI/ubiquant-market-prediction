@@ -101,7 +101,7 @@ class LSTMModel(nn.Module):
 
         self.bn_1 = nn.BatchNorm1d(self.window_size)
 
-        self.rnn = nn.LSTM(self.input_size, self.hidden_size, batch_first=True)
+        self.rnn = nn.LSTM(self.input_size, self.hidden_size, batch_first=True, bidirectional=True)
         # self.rnn = nn.GRU(self.input_size, self.hidden_size, batch_first=True)
 
         # num_gpu = len(c.settings.gpus.split(","))
@@ -109,7 +109,8 @@ class LSTMModel(nn.Module):
         # cell = torch.zeros(1, self.batch_size // num_gpu, self.hidden_size)
         # self.hidden_cell = (hidden, cell)
 
-        self.head = nn.Linear(self.hidden_size, 1)
+        # self.head = nn.Linear(self.hidden_size, 1)
+        self.head = nn.Linear(self.hidden_size * 2, 1)  # bidirectional
 
     # def forward(self, x, h_c=None):
     def forward(self, x):

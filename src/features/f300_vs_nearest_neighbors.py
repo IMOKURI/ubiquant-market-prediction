@@ -10,6 +10,8 @@ from .helper import *
 def f300_vs_nearest_neighbors_average(ctx: Context) -> Dict[str, float]:
     latest = ctx.store.investments[ctx.investment_id].features.last_n(1)
 
+    k = 150
+
     # scaled = np.empty((1, 300), dtype=np.float32)
     # for n, x in enumerate(latest.T):
     #     x_new = ctx.store.scalers[n].transform(x.reshape(-1, 1))
@@ -17,14 +19,14 @@ def f300_vs_nearest_neighbors_average(ctx: Context) -> Dict[str, float]:
     #
     # pca_array = ctx.store.pca.transform(scaled)
 
-    # neigh_index = ctx.store.nearest_neighbors.kneighbors(pca_array, n_neighbors=10, return_distance=False)
-    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=100)
+    # neigh_index = ctx.store.nearest_neighbors.kneighbors(pca_array, n_neighbors=k, return_distance=False)
+    _, nn_index = ctx.store.nearest_neighbors.search(np.ascontiguousarray(latest, dtype=np.float32), k=k)
 
     avg = np.zeros((300,), dtype=np.float32)
     for index in nn_index[0]:
         avg += ctx.store.training_features[index].squeeze()
 
-    avg /= 10
+    avg /= k
 
     return {f"vs_nn_avg_{n}": v for n, v in enumerate(latest.squeeze() - avg)}
 

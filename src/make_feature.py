@@ -7,7 +7,7 @@ import pandas as pd
 from .feature_store import Store
 from .features.base import Context, get_feature, get_feature_schema, get_features, normalize_feature_name
 from .features.f000_basic import *
-from .features.f100_vs_average import *
+from .features.f100_vs_same_time import *
 from .features.f200_lag import *
 from .features.f300_vs_nearest_neighbors import *
 from .features.f400_moving_average import *
