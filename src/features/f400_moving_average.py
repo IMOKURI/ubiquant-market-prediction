@@ -1,8 +1,7 @@
 from typing import Dict
 
-import numpy as np
-
 from .base import Context, feature
+from .helper import *
 
 
 @feature([f"ma_short_{n}" for n in range(300)])
@@ -34,5 +33,5 @@ def f403_moving_average_convergence_divergence_signal(ctx: Context) -> Dict[str,
     last_10 = ctx.store.investments[ctx.investment_id].features_macd.last_n(10)
     features = {}
     for n, col in enumerate(last_10.T):
-        features[f"macd_signal_{n}"] = np.nanmean(col)
+        features[f"macd_signal_{n}"] = nanmean(col)
     return features

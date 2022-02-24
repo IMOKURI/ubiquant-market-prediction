@@ -3,6 +3,7 @@ from typing import Any, Dict
 import numpy as np
 from nptyping import NDArray
 
+from .features.helper import *
 from .streampy import StreamPy
 from .utils import in_kaggle
 
@@ -95,8 +96,8 @@ class Investments:
         ma_long = np.zeros((300,), dtype=self[investment_id].features.dtype)
         macd = np.zeros((300,), dtype=self[investment_id].features.dtype)
         for n, col in enumerate(last_20.T):
-            ma_short[n] = np.nanmean(col[-5:])
-            ma_long[n] = np.nanmean(col[-20:])
+            ma_short[n] = nanmean(col[-5:])
+            ma_long[n] = nanmean(col[-20:])
             macd[n] = ma_short[n] - ma_long[n]
 
         self[investment_id].features_ma_short.extend(ma_short.reshape(1, -1))

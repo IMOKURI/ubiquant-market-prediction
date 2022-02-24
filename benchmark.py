@@ -4,7 +4,9 @@ sys.path.append("../inputs")
 
 # isort: split
 
+import cProfile
 import logging
+from pstats import Stats
 
 import pandas as pd
 import ubiquant
@@ -49,4 +51,13 @@ def bench():
 
 if __name__ == "__main__":
     utils.basic_logger()
+
+    pr = cProfile.Profile()
+    pr.enable()
+
     bench()
+
+    pr.disable()
+    stats = Stats(pr)
+    stats.sort_stats("tottime").print_stats(50)  # 個別処理時間
+    # stats.sort_stats("cumulative").print_stats(50)  # サブ処理含む処理時間

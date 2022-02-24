@@ -3,6 +3,7 @@ from typing import Dict
 import numpy as np
 
 from .base import Context, feature
+from .helper import *
 
 
 @feature([f"vs_nn_avg_{n}" for n in range(300)])
@@ -38,7 +39,7 @@ def f301_nearest_neighbors_target(ctx: Context) -> Dict[str, float]:
 
     features = {}
     for n in [16, 32, 64, 128, 256, 512, 1024, 2048]:
-        features[f"nn_target_{n}"] = np.nanmean(nn_targets[:n])
+        features[f"nn_target_{n}"] = nanmean(nn_targets[:n])
 
     return features
 
@@ -53,7 +54,7 @@ def f302_nearest_neighbors_target_min(ctx: Context) -> Dict[str, float]:
 
     features = {}
     for n in [16, 32, 64, 128, 256, 512, 1024, 2048]:
-        features[f"nn_target_min_{n}"] = np.nanmin(nn_targets[:n])
+        features[f"nn_target_min_{n}"] = nanmin(nn_targets[:n])
 
     return features
 
@@ -68,7 +69,7 @@ def f303_nearest_neighbors_target_max(ctx: Context) -> Dict[str, float]:
 
     features = {}
     for n in [16, 32, 64, 128, 256, 512, 1024, 2048]:
-        features[f"nn_target_max_{n}"] = np.nanmax(nn_targets[:n])
+        features[f"nn_target_max_{n}"] = nanmax(nn_targets[:n])
 
     return features
 
@@ -83,6 +84,6 @@ def f304_nearest_neighbors_target_median(ctx: Context) -> Dict[str, float]:
 
     features = {}
     for n in [16, 32, 64, 128, 256, 512, 1024, 2048]:
-        features[f"nn_target_median_{n}"] = np.nanmedian(nn_targets[:n])
+        features[f"nn_target_median_{n}"] = nanmedian(nn_targets[:n])
 
     return features
