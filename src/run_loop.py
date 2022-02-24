@@ -120,8 +120,11 @@ def train_fold(c, input, fold, device):
         # ====================================================
         # Training
         # ====================================================
-        # store = Store.empty()
-        store = Store.train(c, fold)
+        if c.params.preprocess:
+            log.info("Load pretrained features to Store.")
+            store = Store.train(c, fold)
+        else:
+            store = Store.empty()
         iter_train = TimeSeriesAPI(train_folds, scoring=False)
         avg_train_loss = AverageMeter()
 
@@ -142,14 +145,14 @@ def train_fold(c, input, fold, device):
                     c.settings.dirs.feature,
                     with_target=True,
                     fallback_to_none=False,
-                    debug=c.settings.debug,
+                    # debug=c.settings.debug,
                 )
                 train_ds = make_dataset(c, pred_df)
 
-                assert len(train_df["investment_id"].unique()) == len(
-                    train_df["investment_id"]
-                ), "investment_id is not unique."
-                assert len(train_df) == len(pred_df), "train_df and pred_df do not same size."
+                # assert len(train_df["investment_id"].unique()) == len(
+                #     train_df["investment_id"]
+                # ), "investment_id is not unique."
+                # assert len(train_df) == len(pred_df), "train_df and pred_df do not same size."
             else:
                 train_ds = make_dataset(c, train_df)
 
@@ -187,8 +190,11 @@ def train_fold(c, input, fold, device):
         # ====================================================
         # Validation
         # ====================================================
-        # store = Store.empty()
-        store = Store.train(c, fold)
+        if c.params.preprocess:
+            log.info("Load pretrained features to Store.")
+            store = Store.train(c, fold)
+        else:
+            store = Store.empty()
         iter_valid = TimeSeriesAPI(valid_folds)
         avg_val_loss = AverageMeter()
 
@@ -210,14 +216,14 @@ def train_fold(c, input, fold, device):
                     # load_from_store=not c.settings.debug,
                     with_target=True,
                     fallback_to_none=False,
-                    debug=c.settings.debug,
+                    # debug=c.settings.debug,
                 )
                 valid_ds = make_dataset(c, pred_df)
 
-                assert len(valid_df["investment_id"].unique()) == len(
-                    valid_df["investment_id"]
-                ), "investment_id is not unique."
-                assert len(valid_df) == len(pred_df), "valid_df and pred_df do not same size."
+                # assert len(valid_df["investment_id"].unique()) == len(
+                #     valid_df["investment_id"]
+                # ), "investment_id is not unique."
+                # assert len(valid_df) == len(pred_df), "valid_df and pred_df do not same size."
             else:
                 valid_ds = make_dataset(c, valid_df)
 

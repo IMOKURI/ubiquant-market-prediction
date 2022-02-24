@@ -38,7 +38,7 @@ def make_feature(
     save_to_store: bool = True,
     with_target: bool = False,
     fallback_to_none: bool = True,
-    debug: bool = True,
+    debug: bool = False,
 ):
     fingerprint = get_fingerprint(base_df)
 
@@ -71,14 +71,14 @@ def make_feature(
     # )
 
     schema = get_feature_schema()
-    feature_to_cols = {}
+    feature_to_cols = {}  # type: dict[str, List[str]]
     dfs = []
     default_feature_cols = [f"f_{n}" for n in range(300)]
 
     if feature_list_to_calc:
-        features = []
+        features = []  # type: List[dict[str, float]]
 
-        for n, investment_id in enumerate(base_df["investment_id"]):
+        for investment_id in base_df["investment_id"]:
             feature = {}  # type: dict[str, float]
 
             ctx = Context(base_df[default_feature_cols].values, store, investment_id, fallback_to_none=fallback_to_none)
@@ -87,9 +87,10 @@ def make_feature(
 
                 result = func(ctx)  # type: dict[str, float]
 
-                for k in result:
-                    if k in feature:
-                        raise ValueError(f"Feature name {k} is duplicated across features.")
+                if debug:
+                    for k in result:
+                        if k in feature:
+                            raise ValueError(f"Feature name {k} is duplicated across features.")
 
                 if fname not in feature_to_cols:
                     feature_to_cols[fname] = list(result.keys())
@@ -127,8 +128,8 @@ def make_feature(
     # assert len(dfs), "Feature dataframe is empty."
     dst = pd.concat(dfs, axis=1)
 
-    dst.fillna(0.0, inplace=True)
     # TODO: Nan のときのハンドリング
     # assert dst.isnull().values.sum() == 0, f"Feature DataFrame contains Nan. {dst.isnull().values.sum()}"
+    # dst.fillna(0.0, inplace=True)
 
     return dst

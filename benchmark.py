@@ -13,9 +13,32 @@ import ubiquant
 
 import src.utils as utils
 from src.feature_store import Store
+from src.features.base import _ALL_FEATURE_NAMES
+from src.make_feature import make_feature
 from src.time_series_api import TimeSeriesAPI
 
 log = logging.getLogger(__name__)
+
+FEATURES = list(_ALL_FEATURE_NAMES)
+FEATURES = [
+    "f000",  # f000_initial_features
+    "f001",  # f001_last10_features
+    "f100",  # f100_vs_same_time_id_average
+    "f200",  # f200_lag_last_features
+    "f201",  # f201_lag_last_3_features
+    "f202",  # f202_lag_last_4_features
+    # "f300",  # f300_vs_nearest_neighbors_average
+    # "f301",  # f301_nearest_neighbors_target (mean)
+    # "f302",  # f302_nearest_neighbors_target_min
+    # "f303",  # f303_nearest_neighbors_target_max
+    # "f304",  # f304_nearest_neighbors_target_median
+    "f400",  # f400_moving_average_short
+    "f401",  # ff401_moving_average_long
+    "f402",  # f402_moving_average_convergence_divergence
+    "f403",  # f403_moving_average_convergence_divergence_signal
+    "f901",  # f901_pseudo_last_target
+    "f902",  # f902_last10_target
+]
 
 
 def bench():
@@ -33,6 +56,8 @@ def bench():
         for train_df, sample_prediction_df in iter_train:
             store.update(train_df.values)
 
+            pred_df = make_feature(train_df, store, FEATURES, load_from_store=False, save_to_store=False)
+
             iter_train.predict(sample_prediction_df)
 
     log.info("Test data")
@@ -45,6 +70,8 @@ def bench():
     with utils.timer("store.append"):
         for test_df, sample_prediction_df in iter_test:
             store.update(test_df.values)
+
+            pred_df = make_feature(test_df, store, FEATURES, load_from_store=False, save_to_store=False)
 
             env.predict(sample_prediction_df)
 

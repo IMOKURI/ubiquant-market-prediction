@@ -23,8 +23,7 @@ def f401_moving_average_long(ctx: Context) -> Dict[str, float]:
 @feature([f"macd_{n}" for n in range(300)])
 def f402_moving_average_convergence_divergence(ctx: Context) -> Dict[str, float]:
     return {
-        f"macd_{n}": v
-        for n, v in enumerate(ctx.store.investments[ctx.investment_id].features_macd.last_n(1).squeeze())
+        f"macd_{n}": v for n, v in enumerate(ctx.store.investments[ctx.investment_id].features_macd.last_n(1).squeeze())
     }
 
 

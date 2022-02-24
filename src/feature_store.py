@@ -17,25 +17,6 @@ from .investment import Investments
 from .utils import catch_everything_in_kaggle
 
 
-def is_notebook():
-    try:
-        shell = get_ipython().__class__.__name__
-        if shell == "ZMQInteractiveShell":
-            return True  # Jupyter notebook or qtconsole
-        elif shell == "TerminalInteractiveShell":
-            return False  # Terminal running IPython
-        else:
-            return False  # Other type (?)
-    except NameError:
-        return False  # Probably standard Python interpreter
-
-
-if is_notebook():
-    from tqdm.notebook import tqdm
-else:
-    from tqdm import tqdm
-
-
 class Store:
     def __init__(
         self,
@@ -63,6 +44,9 @@ class Store:
 
     @classmethod
     def train(cls, c: DictConfig, training_fold: Optional[int] = None) -> "Store":
+        """
+        TODO: c.params.preprocess によって、ロードするものを変更する。
+        """
         instance = cls.empty()
 
         # sampling_array_path = os.path.join(c.settings.dirs.input_minimal, f"sampling_pca{c.params.pca_n_components}.npy")

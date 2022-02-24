@@ -39,8 +39,8 @@ def feature(columns: List[str]):
         @wraps(func)
         def wrapper(*args, **kwargs):
             ctx = args[0]
-            assert isinstance(ctx, Context)
-            assert len(args) == 1
+            # assert isinstance(ctx, Context)
+            # assert len(args) == 1
             ctx.current_feature_name = func.__name__
 
             try:
