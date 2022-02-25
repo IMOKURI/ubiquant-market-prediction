@@ -96,7 +96,9 @@ class LSTMModel(nn.Module):
 
         self.batch_size = c.params.batch_size
         self.window_size = c.params.model_window  # Sequence for LSTM
+        self.num_feature = len(c.params.feature_set) - 1
         self.input_size = c.params.model_input
+        self.input_size_by_feat = self.input_size // self.num_feature
         self.hidden_size = 300
 
         self.bn_1 = nn.BatchNorm1d(self.window_size)
@@ -115,7 +117,9 @@ class LSTMModel(nn.Module):
     # def forward(self, x, h_c=None):
     def forward(self, x):
         with amp.autocast(enabled=self.amp):
-            x = self.bn_1(x.view(-1, self.window_size, self.input_size))
+            x = x.view(-1, self.num_feature, self.window_size, self.input_size_by_feat)
+            x = x.permute(0, 2, 1, 3).reshape(-1, self.window_size, self.input_size)
+            x = self.bn_1(x)
 
             # if h_c is None:
             #     x, h_c = self.lstm(x)

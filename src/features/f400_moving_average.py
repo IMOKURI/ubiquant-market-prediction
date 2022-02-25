@@ -34,3 +34,23 @@ def f403_moving_average_convergence_divergence_signal(ctx: Context) -> Dict[str,
     for n, col in enumerate(last_10.T):
         features[f"macd_signal_{n}"] = nanmean(col)
     return features
+
+
+@feature([f"ma_short_{time_id}_{n}" for time_id in range(10) for n in range(300)])
+def f410_moving_average_short_last10(ctx: Context) -> Dict[str, float]:
+    last_10 = ctx.store.investments[ctx.investment_id].features_ma_short.last_n(10)
+    features = {}
+    for time_id, row in enumerate(last_10):
+        for n, val in enumerate(row):
+            features[f"ma_short_{time_id}_{n}"] = val
+    return features
+
+
+@feature([f"ma_long_{time_id}_{n}" for time_id in range(10) for n in range(300)])
+def f411_moving_average_long_last10(ctx: Context) -> Dict[str, float]:
+    last_10 = ctx.store.investments[ctx.investment_id].features_ma_long.last_n(10)
+    features = {}
+    for time_id, row in enumerate(last_10):
+        for n, val in enumerate(row):
+            features[f"ma_long_{time_id}_{n}"] = val
+    return features

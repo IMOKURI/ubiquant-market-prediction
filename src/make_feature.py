@@ -65,7 +65,7 @@ def make_feature(
         if "f900_target" in feature_list_from_cache:
             del feature_list_from_cache["f900_target"]
 
-    # log.info(
+    # log.debug(
     #     f"  features to calculate: {list(feature_list_to_calc.keys())}, "
     #     f"features from cache: {list(feature_list_from_cache.keys())}"
     # )

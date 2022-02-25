@@ -86,7 +86,7 @@ class StreamPy:
     def _grow(self, min_capacity):
         capacity = max(int(1.5 * self.capacity), min_capacity)
         new_data_len = capacity - self.capacity
-        assert new_data_len > 0
+        assert new_data_len > 0, "Invalid data length to grow."
 
         self.values = np.concatenate(
             [self.values, np.empty((new_data_len, len(self.columns)), dtype=self.values.dtype)]
