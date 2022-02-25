@@ -81,6 +81,7 @@ def load_or_transform(func: Callable):
                 np.save(os.path.splitext(path)[0], array)
 
         return array
+
     return wrapper
 
 
@@ -91,6 +92,7 @@ def preprocess(c, df: pd.DataFrame):
     training_features = save_training_features(c, "training_features.npy", df)
     save_training_targets(c, "training_targets.npy", df)
 
+    # Normalization
     if "standard_scaler" in c.params.preprocess:
         scaled = apply_standard_scaler(c, "standard_scaled.npy", training_features)
     elif "power_transformer" in c.params.preprocess:
@@ -98,19 +100,22 @@ def preprocess(c, df: pd.DataFrame):
     else:
         scaled = training_features
 
+    # PCA
     pca_cols = [f"pca_{n}" for n in range(c.params.pca_n_components)]
-
     if "pca" in c.params.preprocess:
         df[pca_cols] = apply_pca(c, f"pca_{c.params.pca_n_components}.npy", scaled)
     elif "ppca" in c.params.preprocess:
         df[pca_cols] = apply_ppca(c, f"ppca.npy", scaled)
 
+    # Nearest Neighbors
     if "nearest_neighbors" in c.params.preprocess:
         sampling_array = sampling(c, f"sampling_pca{c.params.pca_n_components}.npy", df)
         _ = apply_nearest_neighbors(c, sampling_array)
-
-    if "faiss_ivfpq" in c.params.preprocess:
+    elif "faiss_ivfpq" in c.params.preprocess:
         _ = apply_faiss_nearest_neighbors(c, "faiss_ivfpq.index", training_features)
+
+    if "remove_china_shock" in c.params.preprocess:
+        df = df[(df["time_id"] < 300) | (df["time_id"] > 550)].reset_index(drop=True)
 
     return df
 

@@ -65,10 +65,10 @@ class Store:
             training_targets_path = os.path.join(c.settings.dirs.input_minimal, f"training_targets_{training_fold}.npy")
             nearest_neighbors_path = os.path.join(c.settings.dirs.preprocess, f"faiss_ivfpq_{training_fold}.index")
 
-        if os.path.exists(training_features_path):
+        if "faiss_ivfpq" in c.params.preprocess and os.path.exists(training_features_path):
             instance.training_features = np.load(training_features_path)
 
-        if os.path.exists(training_targets_path):
+        if "faiss_ivfpq" in c.params.preprocess and os.path.exists(training_targets_path):
             instance.training_targets = np.load(training_targets_path)
 
         # if os.path.exists(sampling_array_path):
@@ -84,8 +84,9 @@ class Store:
         # if os.path.exists(pca_path):
         #     instance.pca = pickle.load(open(pca_path, "rb"))
 
-        if os.path.exists(nearest_neighbors_path):
-            # instance.nearest_neighbors = pickle.load(open(nearest_neighbors_path, "rb"))
+        # instance.nearest_neighbors = pickle.load(open(nearest_neighbors_path, "rb"))
+
+        if "faiss_ivfpq" in c.params.preprocess and os.path.exists(nearest_neighbors_path):
 
             index_cpu = faiss.read_index(nearest_neighbors_path)
 
