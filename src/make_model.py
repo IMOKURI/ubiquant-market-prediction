@@ -17,6 +17,8 @@ def make_model(c, device=None, model_path=None):
         model = OneDCNNModel(c)
     elif c.params.model == "ump_lstm":
         model = LSTMModel(c)
+    elif c.params.model == "ump_transformer":
+        model = TransformerModel(c)
     else:
         raise Exception("Invalid model.")
 
@@ -130,6 +132,46 @@ class LSTMModel(nn.Module):
             x = self.head(x).view(-1, self.window_size)
 
         return x  # , h_c
+
+
+class TransformerModel(nn.Module):
+    """
+    シングルGPUで実行する必要がある。
+    （現状、マルチGPUの設定 DataParallel がたぶんよろしくない）
+    """
+    def __init__(self, c):
+        super().__init__()
+        self.amp = c.settings.amp
+
+        self.batch_size = c.params.batch_size
+        self.window_size = c.params.model_window  # Sequence
+        self.num_feature = len(c.params.feature_set) - 1
+        self.input_size = c.params.model_input
+        self.input_size_by_feat = self.input_size // self.num_feature
+        self.num_head = 9
+
+        self.bn_1 = nn.BatchNorm1d(self.window_size)
+
+        # batch_first=False なので注意。(pytorch のバージョンが古い)
+        self.transformer = nn.Transformer(d_model=self.input_size, nhead=self.num_head)
+
+        self.head = nn.Linear(self.input_size, 1)
+
+    # def forward(self, x, h_c=None):
+    def forward(self, x):
+        with amp.autocast(enabled=self.amp):
+            x = x.view(-1, self.num_feature, self.window_size, self.input_size_by_feat)
+            x = x.permute(0, 2, 1, 3).reshape(self.batch_size, self.window_size, self.input_size)
+            x = self.bn_1(x).permute(1, 0, 2)
+
+            src = x[:-1, :, :]
+            tgt = x[-1:, :, :]
+
+            x = self.transformer(src, tgt).squeeze(0)
+
+            x = self.head(x).view(self.batch_size)
+
+        return x
 
 
 def weight_norm(layer, dim=None, enabled=True):
