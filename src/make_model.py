@@ -160,8 +160,9 @@ class TransformerModel(nn.Module):
     # def forward(self, x, h_c=None):
     def forward(self, x):
         with amp.autocast(enabled=self.amp):
+            batch_size = x.size(0)
             x = x.view(-1, self.num_feature, self.window_size, self.input_size_by_feat)
-            x = x.permute(0, 2, 1, 3).reshape(self.batch_size, self.window_size, self.input_size)
+            x = x.permute(0, 2, 1, 3).reshape(batch_size, self.window_size, self.input_size)
             x = self.bn_1(x).permute(1, 0, 2)
 
             src = x[:-1, :, :]
@@ -169,7 +170,7 @@ class TransformerModel(nn.Module):
 
             x = self.transformer(src, tgt).squeeze(0)
 
-            x = self.head(x).view(self.batch_size)
+            x = self.head(x).view(batch_size)
 
         return x
 
