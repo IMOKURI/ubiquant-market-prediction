@@ -87,7 +87,8 @@ def train_fold(c, input, fold, device):
     cols = [f"f_{n}" for n in range(300)]
     save_training_features(c, f"training_features_{fold}.npy", train_folds)
     save_training_targets(c, f"training_targets_{fold}.npy", train_folds)
-    apply_faiss_nearest_neighbors(c, f"faiss_ivfpq_{fold}.index", train_folds[cols].values)
+    if "faiss_ivfpq" in c.params.preprocess:
+        apply_faiss_nearest_neighbors(c, f"faiss_ivfpq_{fold}.index", train_folds[cols].values)
 
     # ====================================================
     # Data Loader
