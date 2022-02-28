@@ -187,10 +187,10 @@ class OneDCNNModel(nn.Module):
         self.amp = c.settings.amp
         self.input = c.params.model_input
 
-        self.hidden_size = 2048
+        self.hidden_size = 4096
         self.ch_1 = 256
-        self.ch_2 = 384
-        self.ch_3 = 384
+        self.ch_2 = 512
+        self.ch_3 = 512
 
         self.ch_po_1 = int(self.hidden_size / self.ch_1 / 2)
         self.ch_po_2 = int(self.hidden_size / self.ch_1 / 2 / 2) * self.ch_3
@@ -229,7 +229,7 @@ class OneDCNNModel(nn.Module):
         self.head = nn.Sequential(
             nn.BatchNorm1d(self.ch_po_2),
             nn.Dropout(0.1),
-            nn.utils.weight_norm(nn.Linear(self.ch_po_2, 1)),
+            nn.utils.weight_norm(nn.Linear(self.ch_po_2, c.params.n_class)),
         )
 
     def forward(self, x):
