@@ -104,13 +104,13 @@ params:
     # - "f401"  # f401_moving_average_long
     # - "f402"  # f402_moving_average_convergence_divergence
     # - "f403"  # f403_moving_average_convergence_divergence_signal
-    # - "f410"  # f410_moving_average_short_last10
-    # - "f411"  # f411_moving_average_long_last10
+    - "f410"  # f410_moving_average_short_last10
+    - "f411"  # f411_moving_average_long_last10
     # - "f901"  # f901_pseudo_last_target
     - "f902"  # f902_last10_target
   dataset: ump_1
   model: ump_lstm
-  model_input: 300
+  model_input: 900
   model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []
