@@ -65,14 +65,14 @@ settings:
 params:
   seed: 440
   n_class: 10
-  preprocess:  # []
+  preprocess: []
     # - "standard_scaler"
     # - "power_transformer"
     # - "pca"
     # - "ppca"
     # - "nearest_neighbors"
     # - "faiss_ivfpq"
-    - "remove_china_shock"
+    # - "remove_china_shock"
   pca_n_components: 50
   n_fold: 5
   skip_training: False
