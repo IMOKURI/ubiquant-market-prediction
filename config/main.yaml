@@ -63,7 +63,7 @@ settings:
   training_method: nn
 
 params:
-  seed: 440
+  seed: 1440
   n_class: 1
   preprocess: []
     # - "standard_scaler"
