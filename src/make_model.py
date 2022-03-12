@@ -38,6 +38,7 @@ def load_model(c, device, pretrained=None):
 
     for training in pretrained:
         c.params.model = training.model
+        c.params.model_input = training.model_input
 
         if training.model == "lightgbm":
             model = joblib.load(os.path.join(training.dir, "lightgbm.pkl"))
