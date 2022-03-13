@@ -28,10 +28,9 @@ def main(c):
     oof_df = pd.DataFrame()
     losses = utils.AverageMeter()
     single_run = False
-    num_fold = c.params.n_fold
-    # num_fold = (
-    #     c.params.n_fold * 3 if c.params.fold in ["combinational_group", "combinational_purged"] else c.params.n_fold
-    # )
+    num_fold = (
+        c.params.n_fold + 1 if c.params.fold in ["combinational_group", "combinational_purged"] else c.params.n_fold
+    )
 
     for fold in range(num_fold):
         try:
