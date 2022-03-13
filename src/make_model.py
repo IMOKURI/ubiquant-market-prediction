@@ -37,9 +37,12 @@ def load_model(c, device, pretrained=None):
     models = []
 
     for training in pretrained:
-        c.params.model = training.model
-        c.params.model_input = training.model_input
-        c.params.n_class = training.n_class
+        try:
+            c.params.model = training.model
+            c.params.model_input = training.model_input
+            c.params.n_class = training.n_class
+        except Exception:
+            pass
 
         if training.model == "lightgbm":
             model = joblib.load(os.path.join(training.dir, "lightgbm.pkl"))
@@ -191,8 +194,8 @@ class OneDCNNModel(nn.Module):
 
         self.hidden_size = 1024
         self.ch_1 = 128
-        self.ch_2 = 256
-        self.ch_3 = 256
+        self.ch_2 = 384
+        self.ch_3 = 384
 
         self.ch_po_1 = int(self.hidden_size / self.ch_1 / 2)
         self.ch_po_2 = int(self.hidden_size / self.ch_1 / 2 / 2) * self.ch_3
