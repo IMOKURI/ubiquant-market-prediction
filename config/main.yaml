@@ -74,7 +74,7 @@ params:
     # - "faiss_ivfpq"
     # - "remove_china_shock"
   pca_n_components: 50
-  n_fold: 4
+  n_fold: 5
   skip_training: False
   epoch: 10
   es_patience: 0
