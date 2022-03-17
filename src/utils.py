@@ -219,7 +219,7 @@ def setup_wandb(c):
         return run
 
 
-def teardown_wandb(c, run, loss):
+def teardown_wandb(c, run, loss, score):
     if c.wandb.enabled:
         wandb.summary["loss"] = loss
         artifact = wandb.Artifact(
@@ -230,18 +230,14 @@ def teardown_wandb(c, run, loss):
         artifact.add_dir(".")
         run.log_artifact(artifact)
         log.info(f"WandB recorded. name: {run.name}, id: {run.id}")
+        wandb.alert(
+            title="Result",
+            text=f"Run name: {run.name}, id: {run.id}, score: {score:.5}, loss: {loss:.5f}",
+            level=wandb.AlertLevel.INFO,
+        )
 
 
 def get_commit_hash(dir_):
     repo = git.Repo(dir_, search_parent_directories=True)
     sha = repo.head.object.hexsha
     return sha
-
-
-def send_result_to_slack(score, loss):
-    webhook_url = os.environ.get("SLACK_WEBHOOK_URL", "")
-    msg = f"Run at: {os.path.basename(os.getcwd())}, score: {score:.5f}, loss: {loss:.5f}"
-    try:
-        requests.post(webhook_url, data=json.dumps({"text": msg}))
-    except Exception:
-        log.warning("Failed to send message to slack.")

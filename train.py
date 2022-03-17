@@ -71,8 +71,7 @@ def main(c):
 
     log.info("Done.")
 
-    utils.teardown_wandb(c, run, losses.avg)
-    utils.send_result_to_slack(score, losses.avg)
+    utils.teardown_wandb(c, run, losses.avg, score)
 
 
 if __name__ == "__main__":
