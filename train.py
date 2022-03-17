@@ -8,7 +8,7 @@ from omegaconf.errors import ConfigAttributeError
 import src.utils as utils
 from src.get_score import record_result
 from src.load_data import InputData
-from src.run_loop import train_fold, train_fold_lightgbm
+from src.run_loop import train_fold, train_fold_lightgbm, train_fold_tabnet
 
 log = logging.getLogger(__name__)
 
@@ -44,6 +44,8 @@ def main(c):
 
         if c.settings.training_method == "lightgbm":
             _oof_df, _, loss = train_fold_lightgbm(c, input.train, fold)
+        elif c.settings.training_method == "tabnet":
+            _oof_df, _, loss = train_fold_tabnet(c, input.train, fold)
         else:
             _oof_df, score, loss = train_fold(c, input, fold, device)
 
