@@ -124,10 +124,9 @@ def train_fold_tabnet(c, df, fold):
     os.makedirs(f"fold{fold}", exist_ok=True)
     clf.save_model(f"fold{fold}/tabnet")
 
-    feature_cols = [f"f_{n}" for n in range(300)]
-    valid_folds["preds"] = clf.predict(valid_folds[feature_cols])
+    valid_folds["preds"] = clf.predict(valid_ds)
 
-    return valid_folds, 0, get_score("rmse", valid_folds["target"].values, valid_folds["preds"].values)
+    return valid_folds, 0, clf.best_cost
 
 
 def train_fold(c, input, fold, device):
