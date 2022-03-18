@@ -37,6 +37,7 @@ def train_fold_lightgbm(c, df, fold):
     lgb_params = {
         "objective": "regression",
         "boosting": "gbdt",
+        "extra_trees": True,  # https://note.com/j26/n/n64d9c37167a6
         "metric": "rmse",
         "learning_rate": 0.05,
         "min_data_in_leaf": 120,
