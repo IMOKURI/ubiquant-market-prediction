@@ -332,8 +332,8 @@ def inference_lightgbm(df, models):
     feature_cols = [f"f_{n}" for n in range(300)]
 
     for n, model in enumerate(models):
-        preds = model.predict(df[feature_cols])
-        predictions[:, n] = preds
+        preds = model.predict(df[feature_cols].values)
+        predictions[:, n] = preds.reshape(-1)
 
     return predictions
 
