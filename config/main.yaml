@@ -63,7 +63,7 @@ settings:
   training_method: nn
 
 params:
-  seed: 6440
+  seed: 7440
   n_class: 1
   preprocess: []
     # - "standard_scaler"
@@ -109,7 +109,7 @@ params:
     # - "f901"  # f901_pseudo_last_target
     # - "f902"  # f902_last10_target
   dataset: ump_1
-  model: ump_1
+  model: ump_1dcnn_small
   model_input: 300
   model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k

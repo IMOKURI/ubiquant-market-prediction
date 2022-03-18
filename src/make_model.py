@@ -15,6 +15,8 @@ def make_model(c, device=None, model_path=None):
         model = MLPModel(c)
     elif c.params.model == "ump_1dcnn":
         model = OneDCNNModel(c)
+    elif c.params.model == "ump_1dcnn_small":
+        model = SmallOneDCNNModel(c)
     elif c.params.model == "ump_lstm":
         model = LSTMModel(c)
     elif c.params.model == "ump_transformer":
@@ -245,6 +247,79 @@ class OneDCNNModel(nn.Module):
             x = self.conv2(x) * x
 
             x = self.max_po_c2(x)
+            x = self.flt(x)
+
+            x = self.head(x).squeeze(1)
+
+        return x
+
+
+# https://www.kaggle.com/ghostcxs/fork-prediction-including-spatial-info-with-conv1d
+class SmallOneDCNNModel(nn.Module):
+    def __init__(self, c):
+        super().__init__()
+        self.amp = c.settings.amp
+        self.input = c.params.model_input
+
+        self.hidden_size = 256
+        self.ch_1 = 1
+        self.ch_2 = 16
+        self.ch_3 = 64
+        self.head_size_1 = int(self.hidden_size / 4 / 4 / 2) * self.ch_3  # 512
+        self.head_size_2 = 128
+        self.head_size_3 = 32
+
+        self.expand = nn.Sequential(
+            nn.Linear(self.input, self.hidden_size),
+            nn.SiLU(),
+            nn.Dropout(0.1),
+        )
+
+        self.conv1 = nn.Sequential(
+            nn.Conv1d(self.ch_1, self.ch_2, kernel_size=5, stride=1, padding=2, bias=True),
+            nn.BatchNorm1d(self.ch_2),
+            nn.LeakyReLU(),
+
+            nn.Conv1d(self.ch_2, self.ch_2, kernel_size=4, stride=4, padding=0, bias=True),
+            nn.BatchNorm1d(self.ch_2),
+            nn.LeakyReLU(),
+
+            nn.Conv1d(self.ch_2, self.ch_3, kernel_size=5, stride=1, padding=2, bias=True),
+            nn.BatchNorm1d(self.ch_3),
+            nn.LeakyReLU(),
+
+            nn.Conv1d(self.ch_3, self.ch_3, kernel_size=4, stride=4, padding=0, bias=True),
+            nn.BatchNorm1d(self.ch_3),
+            nn.LeakyReLU(),
+
+            nn.Conv1d(self.ch_3, self.ch_3, kernel_size=4, stride=2, padding=1, bias=True),
+            nn.BatchNorm1d(self.ch_3),
+            nn.LeakyReLU(),
+        )
+
+        self.flt = nn.Flatten()
+
+        self.head = nn.Sequential(
+            nn.Linear(self.head_size_1, self.head_size_1),
+            nn.SiLU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(self.head_size_1, self.head_size_2),
+            nn.SiLU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(self.head_size_2, self.head_size_3),
+            nn.SiLU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(self.head_size_3, c.params.n_class),
+        )
+
+    def forward(self, x):
+        with amp.autocast(enabled=self.amp):
+            x = self.expand(x).view(x.size(0), self.ch_1, -1)
+
+            x = self.conv1(x)
             x = self.flt(x)
 
             x = self.head(x).squeeze(1)
