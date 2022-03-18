@@ -87,8 +87,8 @@ params:
   label_name: target
   use_feature: True
   feature_set:
-    - "f000"  # f000_initial_features
-    # - "f001"  # f001_last10_features
+    # - "f000"  # f000_initial_features
+    - "f001"  # f001_last10_features
     # - "f100"  # f100_vs_same_time_id_average
     # - "f101"  # f101_vs_same_time_id_max
     # - "f102"  # f102_vs_same_time_id_min
@@ -107,7 +107,7 @@ params:
     # - "f410"  # f410_moving_average_short_last10
     # - "f411"  # f411_moving_average_long_last10
     # - "f901"  # f901_pseudo_last_target
-    # - "f902"  # f902_last10_target
+    - "f902"  # f902_last10_target
   dataset: ump_1
   model: ump_1
   model_input: 300
