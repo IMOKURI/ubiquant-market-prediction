@@ -11,15 +11,13 @@ import pandas as pd
 import torch
 import torch.cuda.amp as amp
 import wandb
-from pytorch_tabnet.tab_model import TabNetRegressor
 
 from .feature_store import Store
-from .get_score import get_score
 from .make_dataset import make_dataloader, make_dataset, make_dataset_general, make_dataset_lightgbm
 from .make_feature import make_feature
 from .make_fold import train_test_split
 from .make_loss import make_criterion, make_optimizer, make_scheduler
-from .make_model import make_model
+from .make_model import make_model, make_model_tabnet
 from .preprocess import apply_faiss_nearest_neighbors, save_training_features, save_training_targets
 from .run_epoch import inference_epoch, train_epoch, validate_epoch
 from .time_series_api import TimeSeriesAPI
@@ -84,30 +82,7 @@ def train_fold_tabnet(c, df, fold):
     train_folds, valid_folds = train_test_split(c, df, fold)
     train_ds, train_labels, valid_ds, valid_labels = make_dataset_general(c, train_folds, valid_folds)
 
-    num_data = len(train_ds)
-    num_steps = num_data // (c.params.batch_size * c.params.gradient_acc_step) * c.params.epoch + 5
-
-    tabnet_params = dict(
-        # n_d=8,
-        # n_a=8,
-        # n_steps=3,
-        # n_independent=1,  # 2 is better CV than 1, but need more time
-        # n_shared=1,  # same above
-        # gamma=1.3,
-        # lambda_sparse=0,
-        # cat_dims=[len(np.unique(train_cat[:, i])) for i in range(train_cat.shape[1])],
-        # cat_emb_dim=[1] * train_cat.shape[1],
-        # cat_idxs=features_cat_index,
-        # optimizer_fn=torch.optim.Adam,
-        # optimizer_params=dict(lr=2e-2, weight_decay=1e-5),
-        mask_type="entmax",
-        scheduler_params=dict(T_0=num_steps, T_mult=1, eta_min=c.params.min_lr, last_epoch=-1),
-        scheduler_fn=torch.optim.lr_scheduler.CosineAnnealingWarmRestarts,
-        seed=c.params.seed,
-        verbose=10,
-    )
-
-    clf = TabNetRegressor(**tabnet_params)
+    clf = make_model_tabnet(c, train_ds)
 
     clf.fit(
         train_ds,

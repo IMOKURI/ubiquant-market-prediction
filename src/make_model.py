@@ -1,11 +1,14 @@
+import io
 import logging
 import os
+import zipfile
+from typing import Any
 
 import joblib
 import torch
 import torch.cuda.amp as amp
 import torch.nn as nn
-import torch.nn.functional as F
+from pytorch_tabnet.tab_model import TabNetRegressor
 
 log = logging.getLogger(__name__)
 
@@ -33,6 +36,41 @@ def make_model(c, device=None, model_path=None):
     return model
 
 
+def make_model_tabnet(c, ds=None, model_path=None):
+
+    tabnet_params = dict(
+        # n_d=8,
+        # n_a=8,
+        # n_steps=3,
+        # n_independent=1,  # 2 is better CV than 1, but need more time
+        # n_shared=1,  # same above
+        # gamma=1.3,
+        # lambda_sparse=0,
+        # cat_dims=[len(np.unique(train_cat[:, i])) for i in range(train_cat.shape[1])],
+        # cat_emb_dim=[1] * train_cat.shape[1],
+        # cat_idxs=features_cat_index,
+        # optimizer_fn=torch.optim.Adam,
+        # optimizer_params=dict(lr=2e-2, weight_decay=1e-5),
+        mask_type="entmax",
+        seed=c.params.seed,
+        verbose=10,
+    )  # type: dict[str, Any]
+
+    if ds is not None:
+        num_data = len(ds)
+        num_steps = num_data // (c.params.batch_size * c.params.gradient_acc_step) * c.params.epoch + 5
+
+        tabnet_params["scheduler_params"] = dict(T_0=num_steps, T_mult=1, eta_min=c.params.min_lr, last_epoch=-1)
+        tabnet_params["scheduler_fn"] = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
+
+    clf = TabNetRegressor(**tabnet_params)
+
+    if model_path is not None:
+        clf.load_model(model_path)
+
+    return clf
+
+
 def load_model(c, device, pretrained=None):
     if pretrained is None:
         pretrained = c.params.pretrained
@@ -41,13 +79,20 @@ def load_model(c, device, pretrained=None):
     for training in pretrained:
         try:
             c.params.model = training.model
-            c.params.model_input = training.model_input
             c.params.n_class = training.n_class
+            c.params.model_input = training.model_input
+            c.params.feature_set = training.feature_set
         except Exception:
             pass
 
         if training.model == "lightgbm":
             model = joblib.load(os.path.join(training.dir, "lightgbm.pkl"))
+        elif training.model == "tabnet":
+            tabnet_zip = io.BytesIO()
+            with zipfile.ZipFile(tabnet_zip, "w") as z:
+                z.write(os.path.join(training.dir, "model_params.json"), arcname="model_params.json")
+                z.write(os.path.join(training.dir, "network.pt"), arcname="network.pt")
+            model = make_model_tabnet(c, model_path=tabnet_zip)
         else:
             model = make_model(c, device, training.dir)
 
