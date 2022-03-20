@@ -65,13 +65,13 @@ settings:
 params:
   seed: 9440
   n_class: 1
-  preprocess: []
+  preprocess: # []
     # - "standard_scaler"
     # - "power_transformer"
     # - "pca"
     # - "ppca"
     # - "nearest_neighbors"
-    # - "faiss_ivfpq"
+    - "faiss_ivfpq"
     # - "remove_china_shock"
   pca_n_components: 50
   n_fold: 5
@@ -96,10 +96,10 @@ params:
     # - "f201"  # f201_lag_last_3_features
     # - "f202"  # f202_lag_last_4_features
     # - "f300"  # f300_vs_nearest_neighbors_average
-    # - "f301"  # f301_nearest_neighbors_target (mean)
+    - "f301"  # f301_nearest_neighbors_target (mean)
     # - "f302"  # f302_nearest_neighbors_target_min
     # - "f303"  # f303_nearest_neighbors_target_max
-    # - "f304"  # f304_nearest_neighbors_target_median
+    - "f304"  # f304_nearest_neighbors_target_median
     # - "f400"  # f400_moving_average_short
     # - "f401"  # f401_moving_average_long
     # - "f402"  # f402_moving_average_convergence_divergence
@@ -110,7 +110,7 @@ params:
     # - "f902"  # f902_last10_target
   dataset: ump_1
   model: ump_1dcnn_small
-  model_input: 300
+  model_input: 308
   model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k
   pretrained: []
