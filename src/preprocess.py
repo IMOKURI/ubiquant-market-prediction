@@ -212,19 +212,28 @@ def fit_scaler(c, scaler_path, data: np.ndarray, scaler_class: type, **kwargs):
 # https://www.ariseanalytics.com/activities/report/20210304/
 # https://rest-term.com/archives/3414/
 class FaissKNeighbors:
-    def __init__(self, k=5):
+    def __init__(self, k=5, use_pq=False):
         res = faiss.StandardGpuResources()
 
         dim = 300  # input dim
-        nlist = 7000  # 4 * sqrt(num_data)
-        m = 20  # choice from [1, 2, 3, 4, 8, 12, 16, 20, 24, 28, 32, 48, 56, 64, 96] and dim ≡ 0 (mod m)
+        nlist = 6000  # 4 * sqrt(num_data)
+        m = 12  # choice from [1, 2, 3, 4, 8, 12, 16, 20, 24, 28, 32, 48, 56, 64, 96] and dim ≡ 0 (mod m)
         nbits = 8  # fixed for GPU
         metric = faiss.METRIC_L2
 
-        config = faiss.GpuIndexIVFPQConfig()
-        config.usePrecomputedTables = True
+        if use_pq:
+            log.debug("use Faiss IVF PQ.")
+            config = faiss.GpuIndexIVFPQConfig()
+            config.usePrecomputedTables = True
 
-        self.index = faiss.GpuIndexIVFPQ(res, dim, nlist, m, nbits, metric, config)
+            self.index = faiss.GpuIndexIVFPQ(res, dim, nlist, m, nbits, metric, config)
+
+        else:
+            log.debug("use Faiss IVF Flat.")
+            config = faiss.GpuIndexIVFFlatConfig()
+
+            self.index = faiss.GpuIndexIVFFlat(res, dim, nlist, metric, config)
+
         self.k = k
 
     def fit(self, X):
