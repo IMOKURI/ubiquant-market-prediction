@@ -37,8 +37,8 @@ wandb:
 
 settings:
   print_freq: 100
-  # gpus: "6,7"
-  gpus: "6"
+  gpus: "6,7"
+  # gpus: "6"
 
   dirs:
     working: ${hydra:runtime.cwd}
