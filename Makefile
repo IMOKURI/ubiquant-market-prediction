@@ -12,6 +12,9 @@ train: ## Run training
 train2: ## Run training
 	@for i in {3..5}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) settings.gpus=\'7\' > /tmp/nohup_$(NOW).log & sleep 5; done
 
+train-seq: ## Run training by Sequential
+	@nohup python train.py wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
+
 train-lgb: ## Run training by LightGBM
 	@nohup python train.py wandb.group=$(GROUP) settings.training_method="lightgbm" > /tmp/nohup_$(NOW).log &
 
