@@ -13,17 +13,17 @@ class Investment:
         self,
         investment_id: int,
         features: StreamPy,
-        # features_ma_short: StreamPy,
-        # features_ma_long: StreamPy,
-        # features_macd: StreamPy,
+        features_ma_short: StreamPy,
+        features_ma_long: StreamPy,
+        features_macd: StreamPy,
         targets: StreamPy,
         pseudo_targets: StreamPy,
     ):
         self.investment_id = investment_id
         self.features = features
-        # self.features_ma_short = features_ma_short  # moving average in short term
-        # self.features_ma_long = features_ma_long  # moving average in long term
-        # self.features_macd = features_macd  # moving average convergence divergence (短期と長期の移動平均の差)
+        self.features_ma_short = features_ma_short  # moving average in short term
+        self.features_ma_long = features_ma_long  # moving average in long term
+        self.features_macd = features_macd  # moving average convergence divergence (短期と長期の移動平均の差)
         self.targets = targets
         self.pseudo_targets = pseudo_targets
 
@@ -32,14 +32,14 @@ class Investment:
         feature_cols = [f"f_{n}" for n in range(300)]
         features = StreamPy.empty(feature_cols, dtype, default_value)
 
-        # feature_ma_short_cols = [f"f_ma_short_{n}" for n in range(300)]
-        # features_ma_short = StreamPy.empty(feature_ma_short_cols, dtype, default_value)
-        #
-        # feature_ma_long_cols = [f"f_ma_long_{n}" for n in range(300)]
-        # features_ma_long = StreamPy.empty(feature_ma_long_cols, dtype, default_value)
-        #
-        # feature_macd_cols = [f"f_macd_{n}" for n in range(300)]
-        # features_macd = StreamPy.empty(feature_macd_cols, dtype, default_value)
+        feature_ma_short_cols = [f"f_ma_short_{n}" for n in range(300)]
+        features_ma_short = StreamPy.empty(feature_ma_short_cols, dtype, default_value)
+
+        feature_ma_long_cols = [f"f_ma_long_{n}" for n in range(300)]
+        features_ma_long = StreamPy.empty(feature_ma_long_cols, dtype, default_value)
+
+        feature_macd_cols = [f"f_macd_{n}" for n in range(300)]
+        features_macd = StreamPy.empty(feature_macd_cols, dtype, default_value)
 
         target_cols = ["target"]
         targets = StreamPy.empty(target_cols, dtype, default_value)
@@ -50,9 +50,9 @@ class Investment:
         return Investment(
             investment_id,
             features,
-            # features_ma_short,
-            # features_ma_long,
-            # features_macd,
+            features_ma_short,
+            features_ma_long,
+            features_macd,
             targets,
             pseudo_targets,
         )
@@ -61,9 +61,9 @@ class Investment:
         return Investment(
             self.investment_id,
             self.features.last_n(n),
-            # self.features_ma_short.last_n(n),
-            # self.features_ma_long.last_n(n),
-            # self.features_macd.last_n(n),
+            self.features_ma_short.last_n(n),
+            self.features_ma_long.last_n(n),
+            self.features_macd.last_n(n),
             self.targets.last_n(n),
             self.pseudo_targets.last_n(n),
         )
@@ -97,18 +97,18 @@ class Investments:
             self[investment_id].features.extend(row[4:304].astype(np.float32).reshape(1, -1))
             self[investment_id].targets.extend(row[3:4].astype(np.float32).reshape(1, -1))
 
-        # last_20 = self[investment_id].features.last_n(20)
-        # ma_short = np.zeros((300,), dtype=self[investment_id].features.dtype)
-        # ma_long = np.zeros((300,), dtype=self[investment_id].features.dtype)
-        # macd = np.zeros((300,), dtype=self[investment_id].features.dtype)
-        # for n, col in enumerate(last_20.T):
-        #     ma_short[n] = nanmean(col[-5:])
-        #     ma_long[n] = nanmean(col[-20:])
-        #     macd[n] = ma_short[n] - ma_long[n]
-        #
-        # self[investment_id].features_ma_short.extend(ma_short.reshape(1, -1))
-        # self[investment_id].features_ma_long.extend(ma_long.reshape(1, -1))
-        # self[investment_id].features_macd.extend(macd.reshape(1, -1))
+        last_20 = self[investment_id].features.last_n(20)
+        ma_short = np.zeros((300,), dtype=self[investment_id].features.dtype)
+        ma_long = np.zeros((300,), dtype=self[investment_id].features.dtype)
+        macd = np.zeros((300,), dtype=self[investment_id].features.dtype)
+        for n, col in enumerate(last_20.T):
+            ma_short[n] = nanmean(col[-5:])
+            ma_long[n] = nanmean(col[-20:])
+            macd[n] = ma_short[n] - ma_long[n]
+
+        self[investment_id].features_ma_short.extend(ma_short.reshape(1, -1))
+        self[investment_id].features_ma_long.extend(ma_long.reshape(1, -1))
+        self[investment_id].features_macd.extend(macd.reshape(1, -1))
 
     def extend_post(self, row: NDArray[(Any,), Any]):
         """
