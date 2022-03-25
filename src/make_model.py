@@ -16,6 +16,8 @@ log = logging.getLogger(__name__)
 def make_model(c, device=None, model_path=None):
     if c.params.model == "ump_1":
         model = MLPModel(c)
+    elif c.params.model == "ump_1_tf":
+        model = MLPModelTF(c)
     elif c.params.model == "ump_1dcnn":
         model = OneDCNNModel(c)
     elif c.params.model == "ump_1dcnn_small":
@@ -130,6 +132,47 @@ class MLPModel(nn.Module):
             x = swish(self.fc_4(x))
 
             x = self.head(x).squeeze(1)
+
+        return x
+
+
+class MLPModelTF(nn.Module):
+    def __init__(self, c):
+        super().__init__()
+        self.amp = c.settings.amp
+        self.dim = c.params.model_input
+
+        self.bn_1 = nn.BatchNorm1d(self.dim)
+
+        self.fc_1 = nn.Linear(self.dim, self.dim)
+        self.fc_2 = nn.Linear(self.dim, self.dim // 2)
+        self.fc_3 = nn.Linear(self.dim // 2, self.dim // 4)
+        self.fc_4 = nn.Linear(self.dim // 4, self.dim // 8)
+        self.fc_5 = nn.Linear(self.dim // 8, 1)
+
+        self._reinitialize()
+
+    def _reinitialize(self):
+        """
+        Tensorflow/Keras-like initialization
+        """
+        for name, p in self.named_parameters():
+            if 'fc' in name:
+                if 'weight' in name:
+                    nn.init.xavier_uniform_(p.data)
+                elif 'bias' in name:
+                    p.data.fill_(0)
+
+    def forward(self, x):
+        with amp.autocast(enabled=self.amp):
+            x = self.bn_1(x)
+
+            x = swish(self.fc_1(x))
+            x = swish(self.fc_2(x))
+            x = swish(self.fc_3(x))
+            x = swish(self.fc_4(x))
+
+            x = self.fc_5(x).squeeze(1)
 
         return x
 
