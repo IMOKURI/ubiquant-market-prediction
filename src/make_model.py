@@ -26,6 +26,8 @@ def make_model(c, device=None, model_path=None):
         model = LSTMModel(c)
     elif c.params.model == "ump_transformer":
         model = TransformerModel(c)
+    elif c.params.model == "ump_1dcnn_lstm":
+        model = OneDCNNLSTMModel(c)
     else:
         raise Exception("Invalid model.")
 
@@ -413,3 +415,93 @@ class SmallOneDCNNModel(nn.Module):
             x = self.head(x).squeeze(1)
 
         return x
+
+
+# https://confit.atlas.jp/guide/event-img/jsai2018/3Pin1-44/public/pdf?type=in
+class OneDCNNLSTMModel(nn.Module):
+    def __init__(self, c):
+        super().__init__()
+        self.amp = c.settings.amp
+
+        # LSTM Parameters
+        self.batch_size = c.params.batch_size
+        self.window_size = c.params.model_window  # Sequence for LSTM
+        self.num_feature = len(c.params.feature_set) - 1
+        self.input_size = c.params.model_input
+        self.input_size_by_feat = self.input_size // self.num_feature
+        self.lstm_hidden_size = 256
+
+        # 1D CNN Parameters
+        self.conv_hidden_size = 256
+        self.ch_1 = 1
+        self.ch_2 = 16
+        self.ch_3 = 64
+        self.head_size_1 = self.lstm_hidden_size * 2  # bidirectional
+        self.head_size_2 = self.head_size_1 // 2
+        self.head_size_3 = self.head_size_2 // 2
+
+        self.bn_1 = nn.BatchNorm1d(self.window_size)
+
+        self.expand = nn.Sequential(
+            nn.Linear(self.input_size, self.conv_hidden_size),
+            nn.SiLU(),
+            nn.Dropout(0.1),
+        )
+
+        self.conv1 = nn.Sequential(
+            nn.Conv1d(self.ch_1, self.ch_2, kernel_size=5, stride=1, padding=2, bias=True),
+            nn.BatchNorm1d(self.ch_2),
+            nn.LeakyReLU(),
+
+            nn.Conv1d(self.ch_2, self.ch_2, kernel_size=4, stride=4, padding=0, bias=True),
+            nn.BatchNorm1d(self.ch_2),
+            nn.LeakyReLU(),
+
+            nn.Conv1d(self.ch_2, self.ch_3, kernel_size=5, stride=1, padding=2, bias=True),
+            nn.BatchNorm1d(self.ch_3),
+            nn.LeakyReLU(),
+
+            nn.Conv1d(self.ch_3, self.ch_3, kernel_size=4, stride=4, padding=0, bias=True),
+            nn.BatchNorm1d(self.ch_3),
+            nn.LeakyReLU(),
+
+            nn.Conv1d(self.ch_3, self.ch_3, kernel_size=4, stride=2, padding=1, bias=True),
+            nn.BatchNorm1d(self.ch_3),
+            nn.LeakyReLU(),
+
+            nn.Flatten(),
+        )
+
+        self.rnn = nn.LSTM(self.head_size_1, self.lstm_hidden_size, batch_first=True, bidirectional=True)
+
+        self.head = nn.Sequential(
+            nn.Linear(self.head_size_1, self.head_size_2),
+            nn.SiLU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(self.head_size_2, self.head_size_3),
+            nn.SiLU(),
+            nn.Dropout(0.1),
+
+            nn.Linear(self.head_size_3, 1),
+        )
+
+    # def forward(self, x, h_c=None):
+    def forward(self, x):
+        with amp.autocast(enabled=self.amp):
+            x = x.view(-1, self.num_feature, self.window_size, self.input_size_by_feat)
+            x = x.permute(0, 2, 1, 3).reshape(-1, self.window_size, self.input_size)
+
+            x = self.bn_1(x)
+
+            xs = []
+            for n in range(self.window_size):
+                xs.append(self.conv1(self.expand(x[:, n]).view(x.size(0), self.ch_1, -1)))
+            x = torch.stack(xs, dim=1)
+
+            x, _ = self.rnn(x)
+
+            x = self.head(x).view(-1, self.window_size)
+
+        return x  # , h_c
+
