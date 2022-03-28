@@ -24,6 +24,8 @@ def make_model(c, device=None, model_path=None):
         model = SmallOneDCNNModel(c)
     elif c.params.model == "ump_lstm":
         model = LSTMModel(c)
+    elif c.params.model == "ump_lstm_tf":
+        model = LSTMModelTF(c)
     elif c.params.model == "ump_transformer":
         model = TransformerModel(c)
     elif c.params.model == "ump_1dcnn_lstm":
@@ -212,6 +214,73 @@ class LSTMModel(nn.Module):
 
         # self.head = nn.Linear(self.hidden_size, 1)
         self.head = nn.Linear(self.hidden_size * 2, 1)  # bidirectional
+
+    # def forward(self, x, h_c=None):
+    def forward(self, x):
+        with amp.autocast(enabled=self.amp):
+            x = x.view(-1, self.num_feature, self.window_size, self.input_size_by_feat)
+            x = x.permute(0, 2, 1, 3).reshape(-1, self.window_size, self.input_size)
+            x = self.bn_1(x)
+
+            # if h_c is None:
+            #     x, h_c = self.lstm(x)
+            # else:
+            #     x, h_c = self.lstm(x, h_c)
+            x, _ = self.rnn(x)
+
+            x = self.head(x).view(-1, self.window_size)
+
+        return x  # , h_c
+
+
+class LSTMModelTF(nn.Module):
+    def __init__(self, c):
+        super().__init__()
+        self.amp = c.settings.amp
+
+        self.batch_size = c.params.batch_size
+        self.window_size = c.params.model_window  # Sequence for LSTM
+        self.num_feature = len(c.params.feature_set) - 1
+        self.input_size = c.params.model_input
+        self.input_size_by_feat = self.input_size // self.num_feature
+        self.hidden_size = 300
+
+        self.bn_1 = nn.BatchNorm1d(self.window_size)
+
+        self.rnn = nn.LSTM(self.input_size, self.hidden_size, batch_first=True, bidirectional=True)
+        # self.rnn = nn.GRU(self.input_size, self.hidden_size, batch_first=True)
+
+        # num_gpu = len(c.settings.gpus.split(","))
+        # hidden = torch.zeros(1, self.batch_size // num_gpu, self.hidden_size)
+        # cell = torch.zeros(1, self.batch_size // num_gpu, self.hidden_size)
+        # self.hidden_cell = (hidden, cell)
+
+        # self.head = nn.Linear(self.hidden_size, 1)
+        self.head = nn.Linear(self.hidden_size * 2, 1)  # bidirectional
+        self._reinitialize()
+
+    def _reinitialize(self):
+        """
+        Tensorflow/Keras-like initialization
+        """
+        for name, p in self.named_parameters():
+            if 'rnn' in name:
+                if 'weight_ih' in name:
+                    nn.init.xavier_uniform_(p.data)
+                elif 'weight_hh' in name:
+                    nn.init.orthogonal_(p.data)
+                elif 'bias_ih' in name:
+                    p.data.fill_(0)
+                    # Set forget-gate bias to 1
+                    n = p.size(0)
+                    p.data[(n // 4):(n // 2)].fill_(1)
+                elif 'bias_hh' in name:
+                    p.data.fill_(0)
+            elif 'head' in name:
+                if 'weight' in name:
+                    nn.init.xavier_uniform_(p.data)
+                elif 'bias' in name:
+                    p.data.fill_(0)
 
     # def forward(self, x, h_c=None):
     def forward(self, x):
