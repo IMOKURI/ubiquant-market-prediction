@@ -7,10 +7,13 @@ GROUP := $(shell date '+%Y%m%d-%H%M')
 
 
 train: ## Run training
-	@for i in {0..2}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log & sleep 5; done
+	@for i in {0..4}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) settings.gpus=\'0\' > /tmp/nohup_$(NOW).log & sleep 5; done
 
 train2: ## Run training
-	@for i in {3..5}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) settings.gpus=\'7\' > /tmp/nohup_$(NOW).log & sleep 5; done
+	@for i in {5..9}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) settings.gpus=\'1\' > /tmp/nohup_$(NOW).log & sleep 5; done
+
+train3: ## Run training
+	@for i in {10..14}; do nohup python train.py +settings.run_fold=$${i} wandb.group=$(GROUP) settings.gpus=\'7\' > /tmp/nohup_$(NOW).log & sleep 5; done
 
 train-seq: ## Run training by Sequential
 	@nohup python train.py wandb.group=$(GROUP) > /tmp/nohup_$(NOW).log &
