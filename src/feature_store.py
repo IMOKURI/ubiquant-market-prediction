@@ -104,13 +104,16 @@ class Store:
             # row の中のデータは dtype: object であることに注意。
 
             # TODO: 最終的に catch_everything_in_kaggle をいれていく
+            with catch_everything_in_kaggle():
+                self.investments.extend(row)
+
             # with catch_everything_in_kaggle():
-            self.investments.extend(row)
+            #     self.investments.extend_moving_average(row)
 
     def update_post(self, array: NDArray[(Any, Any), Any]):
         for row in array:
             # row の中のデータは dtype: object であることに注意。
 
             # TODO: 最終的に catch_everything_in_kaggle をいれていく
-            # with catch_everything_in_kaggle():
-            self.investments.extend_post(row)
+            with catch_everything_in_kaggle():
+                self.investments.extend_post(row)

@@ -97,6 +97,15 @@ class Investments:
             self[investment_id].features.extend(row[4:304].astype(np.float32).reshape(1, -1))
             self[investment_id].targets.extend(row[3:4].astype(np.float32).reshape(1, -1))
 
+    def extend_moving_average(self, row: NDArray[(Any,), Any]):
+        """
+        Calculate moving average.
+        """
+        if in_kaggle() or row.shape[0] == 302:
+            investment_id = int(row[1])
+        else:
+            investment_id = int(row[2])
+
         last_20 = self[investment_id].features.last_n(20)
         ma_short = np.zeros((300,), dtype=self[investment_id].features.dtype)
         ma_long = np.zeros((300,), dtype=self[investment_id].features.dtype)
