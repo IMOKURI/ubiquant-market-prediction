@@ -51,8 +51,9 @@ settings:
 
   inputs:
     - train.csv
-    - example_test.csv
-    - example_sample_submission.csv
+    # - supplemental_train.csv
+    # - example_test.csv
+    # - example_sample_submission.csv
 
   debug: False
   n_debug_data: 100_000
