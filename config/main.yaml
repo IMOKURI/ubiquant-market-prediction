@@ -64,7 +64,7 @@ settings:
   training_method: nn
 
 params:
-  seed: 13440
+  seed: 14440
   n_class: 1
   preprocess: []
     # - "standard_scaler"
@@ -74,6 +74,7 @@ params:
     # - "nearest_neighbors"
     # - "faiss_ivfpq"
     # - "remove_china_shock"
+    # - "remove_anomaly_target"
   pca_n_components: 50
   n_fold: 5
   skip_training: False
@@ -110,7 +111,7 @@ params:
     # - "f901"  # f901_pseudo_last_target
     # - "f902"  # f902_last10_target
   dataset: ump_1
-  model: ump_1dcnn_small
+  model: ump_1_tf
   model_input: 300
   model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k

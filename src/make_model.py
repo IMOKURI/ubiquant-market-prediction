@@ -14,7 +14,9 @@ log = logging.getLogger(__name__)
 
 
 def make_model(c, device=None, model_path=None):
-    if c.params.model == "ump_1":
+    if c.params.model == "ump_ad_ae":
+        model = AnomalyDetectionAutoEncoderModel(c)
+    elif c.params.model == "ump_1":
         model = MLPModel(c)
     elif c.params.model == "ump_1_tf":
         model = MLPModelTF(c)
@@ -109,6 +111,34 @@ def load_model(c, device, pretrained=None):
 
 def swish(x):
     return x * torch.sigmoid(x)
+
+
+class AnomalyDetectionAutoEncoderModel(nn.Module):
+    def __init__(self, c):
+        super().__init__()
+        self.amp = c.settings.amp
+        self.dim = c.params.model_input
+
+        self.encoder = nn.Sequential(
+            nn.Linear(self.dim, 200),
+            nn.BatchNorm1d(200),
+            nn.ReLU(),
+            nn.Linear(200, 100),
+        )
+
+        self.decoder = nn.Sequential(
+            nn.Linear(100, 200),
+            nn.BatchNorm1d(200),
+            nn.ReLU(),
+            nn.Linear(200, self.dim),
+        )
+
+    def forward(self, x):
+        with amp.autocast(enabled=self.amp):
+            x = self.encoder(x)
+            out = self.decoder(x)
+
+        return out, x
 
 
 class MLPModel(nn.Module):

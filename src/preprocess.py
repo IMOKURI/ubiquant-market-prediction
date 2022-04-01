@@ -92,6 +92,9 @@ def preprocess(c, df: pd.DataFrame):
     if "remove_china_shock" in c.params.preprocess:
         df = df[(df["time_id"] < 300) | (df["time_id"] > 550)].reset_index(drop=True)
 
+    if "remove_anomaly_target" in c.params.preprocess:
+        df = df[(df["target"] > -3.5) & (df["target"] < 3.5)].reset_index(drop=True)
+
     training_features = save_training_features(c, "training_features.npy", df)
     save_training_targets(c, "training_targets.npy", df)
 

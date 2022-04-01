@@ -11,12 +11,11 @@ from .utils import AverageMeter, compute_grad_norm, timeSince
 log = logging.getLogger(__name__)
 
 
-def train_epoch(c, train_loader, model, criterion, optimizer, scheduler, scaler, epoch, device):
+def train_epoch(c, train_loader, model, criterion, optimizer, scheduler, scaler, epoch, device, verbose=False):
     model.train()
     losses = AverageMeter()
     optimizer.zero_grad(set_to_none=True)
-
-    # start = time.time()
+    start = time.time()
 
     for step, (features, labels) in enumerate(train_loader):
         features = features.to(device)
@@ -24,7 +23,6 @@ def train_epoch(c, train_loader, model, criterion, optimizer, scheduler, scaler,
         batch_size = labels.size(0)
 
         with amp.autocast(enabled=c.settings.amp):
-            # y_preds = model(images)
             y_preds = model(features)
 
             loss = criterion(y_preds, labels)
@@ -39,11 +37,11 @@ def train_epoch(c, train_loader, model, criterion, optimizer, scheduler, scaler,
 
             # error_if_nonfinite に関する warning を抑止する
             # pytorch==1.10 で不要となりそう
-            # with warnings.catch_warnings():
-            #     warnings.simplefilter("ignore", FutureWarning)
-            #     grad_norm = torch.nn.utils.clip_grad_norm_(
-            #         model.parameters(), c.params.max_grad_norm  # , error_if_nonfinite=False
-            #     )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", FutureWarning)
+                grad_norm = torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), c.params.max_grad_norm  # , error_if_nonfinite=False
+                )
 
             scaler.step(optimizer)
             scaler.update()
@@ -51,34 +49,33 @@ def train_epoch(c, train_loader, model, criterion, optimizer, scheduler, scaler,
             optimizer.zero_grad(set_to_none=True)
             scheduler.step()
         else:
-            ...
-            # grad_norm = compute_grad_norm(model.parameters())
+            grad_norm = compute_grad_norm(model.parameters())
 
-        # if c.params.scheduler == "CosineAnnealingWarmupRestarts":
-        #     last_lr = scheduler.get_lr()[0]
-        # else:
-        #     last_lr = scheduler.get_last_lr()[0]
+        if c.params.scheduler == "CosineAnnealingWarmupRestarts":
+            last_lr = scheduler.get_lr()[0]
+        else:
+            last_lr = scheduler.get_last_lr()[0]
 
         # end = time.time()
-        # if step % c.settings.print_freq == 0 or step == (len(train_loader) - 1):
-        #     log.info(
-        #         f"Epoch: [{epoch + 1}][{step}/{len(train_loader)}] "
-        #         f"Elapsed {timeSince(start, float(step + 1) / len(train_loader)):s} "
-        #         f"Loss: {losses.avg:.4f} "
-        #         f"Grad: {grad_norm:.4f} "
-        #         f"LR: {last_lr:.2e}  "
-        #     )
+        if verbose and (step % c.settings.print_freq == 0 or step == (len(train_loader) - 1)):
+            log.info(
+                f"Epoch: [{epoch + 1}][{step}/{len(train_loader)}] "
+                f"Elapsed {timeSince(start, float(step + 1) / len(train_loader)):s} "
+                f"Loss: {losses.avg:.4f} "
+                f"Grad: {grad_norm:.4f} "
+                f"LR: {last_lr:.2e}  "
+            )
 
     return losses.avg
 
 
-def validate_epoch(c, valid_loader, model, criterion, device):
+def validate_epoch(c, valid_loader, model, criterion, device, verbose=False):
     model.eval()
     losses = AverageMeter()
 
     size = len(valid_loader.dataset)
     preds = np.zeros((size,))
-    # start = time.time()
+    start = time.time()
 
     for step, (features, labels) in enumerate(valid_loader):
         features = features.to(device)
@@ -87,7 +84,6 @@ def validate_epoch(c, valid_loader, model, criterion, device):
 
         # with torch.inference_mode():
         with torch.no_grad():
-            # y_preds = model(images)
             y_preds = model(features)
 
         loss = criterion(y_preds, labels)
@@ -104,12 +100,12 @@ def validate_epoch(c, valid_loader, model, criterion, device):
             raise Exception("Invalid n_class.")
 
         # end = time.time()
-        # if step % c.settings.print_freq == 0 or step == (len(valid_loader) - 1):
-        #     log.info(
-        #         f"EVAL: [{step}/{len(valid_loader)}] "
-        #         f"Elapsed {timeSince(start, float(step + 1) / len(valid_loader)):s} "
-        #         f"Loss: {losses.avg:.4f} "
-        #     )
+        if verbose and (step % c.settings.print_freq == 0 or step == (len(valid_loader) - 1)):
+            log.info(
+                f"EVAL: [{step}/{len(valid_loader)}] "
+                f"Elapsed {timeSince(start, float(step + 1) / len(valid_loader)):s} "
+                f"Loss: {losses.avg:.4f} "
+            )
 
     return losses.avg, preds
 

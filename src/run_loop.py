@@ -13,6 +13,7 @@ import torch.cuda.amp as amp
 import wandb
 
 from .feature_store import Store
+from .get_score import get_score
 from .make_dataset import make_dataloader, make_dataset, make_dataset_general, make_dataset_lightgbm
 from .make_feature import make_feature
 from .make_fold import train_test_split
@@ -324,6 +325,110 @@ def train_fold(c, input, fold, device):
         # valid_folds["preds"] = es.best_preds.argmax(1)
     else:
         raise Exception("Invalid n_class.")
+
+    return valid_folds, es.best_score, es.best_loss
+
+
+def train_fold_batch(c, input, fold, device):
+    df = input.train
+    train_folds, valid_folds = train_test_split(c, df, fold)
+
+    # ====================================================
+    # Data Loader
+    # ====================================================
+    train_ds = make_dataset(c, train_folds)
+    valid_ds = make_dataset(c, valid_folds)
+
+    train_loader = make_dataloader(c, train_ds, shuffle=True, drop_last=True)
+    valid_loader = make_dataloader(c, valid_ds, shuffle=False, drop_last=False)
+
+    # ====================================================
+    # Model
+    # ====================================================
+    model = make_model(c, device)
+
+    criterion = make_criterion(c)
+    optimizer = make_optimizer(c, model)
+    scaler = amp.GradScaler(enabled=c.settings.amp)
+    # scheduler = make_scheduler(c, optimizer, train_ds)
+    scheduler = make_scheduler(c, optimizer, df)
+
+    es = EarlyStopping(c=c, fold=fold)
+
+    # ====================================================
+    # Loop
+    # ====================================================
+    for epoch in range(c.params.epoch):
+        start_time = time.time()
+
+        # ====================================================
+        # Training
+        # ====================================================
+        if c.params.skip_training:
+            avg_train_loss = 0
+        else:
+            avg_train_loss = train_epoch(
+                c,
+                train_loader,
+                model,
+                criterion,
+                optimizer,
+                scheduler,
+                scaler,
+                epoch,
+                device,
+                verbose=True,
+            )
+
+        # ====================================================
+        # Validation
+        # ====================================================
+        avg_val_loss, preds = validate_epoch(c, valid_loader, model, criterion, device, verbose=True)
+        valid_labels = valid_folds[c.params.label_name].values
+
+        if "LogitsLoss" in c.params.criterion:
+            preds = 1 / (1 + np.exp(-preds))
+
+        # scoring
+        if c.params.n_class == 1:
+            score = get_score(c.params.scoring, valid_labels, preds)
+        elif c.params.n_class > 1:
+            score = get_score(c.params.scoring, valid_labels, preds.argmax(1))
+        else:
+            raise Exception("Invalid n_class.")
+
+        elapsed = time.time() - start_time
+        log.info(
+            f"Epoch {epoch+1} - "
+            f"train_loss: {avg_train_loss:.4f} "
+            f"valid_loss: {avg_val_loss:.4f} "
+            f"score: {score:.4f} "
+            f"time: {elapsed:.0f}s"
+        )
+        if c.wandb.enabled:
+            wandb.log(
+                {
+                    "epoch": epoch + 1,
+                    f"train_loss/fold{fold}": avg_train_loss,
+                    f"valid_loss/fold{fold}": avg_val_loss,
+                    f"score/fold{fold}": score,
+                }
+            )
+
+        es(avg_val_loss, score, model, preds)
+
+        if es.early_stop or os.path.exists(os.path.join(c.settings.dirs.working, "abort-training.flag")):
+            log.info("Early stopping")
+            break
+
+    # if c.params.n_class == 1:
+    #     valid_folds["preds"] = es.best_preds
+    # elif c.params.n_class > 1:
+    #     valid_folds["preds"] = es.best_preds
+    #     # valid_folds[[str(c) for c in range(c.params.n_class)]] = es.best_preds
+    #     # valid_folds["preds"] = es.best_preds.argmax(1)
+    # else:
+    #     raise Exception("Invalid n_class.")
 
     return valid_folds, es.best_score, es.best_loss
 
