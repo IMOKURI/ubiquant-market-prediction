@@ -138,7 +138,7 @@ class AnomalyDetectionAutoEncoderModel(nn.Module):
             x = self.encoder(x)
             out = self.decoder(x)
 
-        return out, x
+        return out
 
 
 class MLPModel(nn.Module):

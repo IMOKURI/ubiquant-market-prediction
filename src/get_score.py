@@ -27,6 +27,9 @@ def get_score(scoring, y_true, y_pred):
 
 
 def record_result(c, df, fold, loss=None):
+    if c.params.model == "ump_ad_ae":
+        return 0
+
     if c.params.scoring == "mean":
         score = df["preds"].mean()
     elif c.params.scoring == "pearson":

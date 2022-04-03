@@ -69,7 +69,12 @@ class BaseDataset(Dataset):
         # self.df = df
         self.use_label = label
         if self.use_label:
-            if c.params.n_class == 1:
+            if c.params.model == "ump_ad_ae":
+                labels = [f"f_{n}" for n in range(c.params.n_class)]
+                self.labels = df[labels].values
+                self.features = df[labels].values
+                return
+            elif c.params.n_class == 1:
                 labels = [c.params.label_name]
                 self.labels = df[c.params.label_name].values
             else:
