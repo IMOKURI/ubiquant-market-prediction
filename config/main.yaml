@@ -127,7 +127,7 @@ params:
   optimizer: Adam
   scheduler: CosineAnnealingWarmupRestarts
   lr: 1e-2
-  min_lr: 1e-6
+  min_lr: 1e-5
   weight_decay: 1e-5
   label_smoothing: 1e-6
   scoring: rmse
