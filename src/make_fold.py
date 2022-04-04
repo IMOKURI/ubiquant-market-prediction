@@ -205,6 +205,6 @@ CPCV_INDEX_5FOLD = {
         13: 0,
         14: 2,
     },
-    "val_time_id": {n: list(map(int, list(s))) for n, s in enumerate(itertools.combinations(range(6), 2))},
-    # "val_time_id": {n: list(map(int, list(s))) for n, s in enumerate(itertools.combinations(range(6), 1))},
+    # "val_time_id": {n: list(map(int, list(s))) for n, s in enumerate(itertools.combinations(range(6), 2))},
+    "val_time_id": {n: list(map(int, list(s))) for n, s in enumerate(itertools.combinations(range(6), 1))},
 }

@@ -30,10 +30,10 @@ def main(c):
     single_run = False
     num_fold = (
         # validation block 1
-        # c.params.n_fold + 1 if c.params.fold in ["combinational_group", "combinational_purged"] else c.params.n_fold
+        c.params.n_fold + 1 if c.params.fold in ["combinational_group", "combinational_purged"] else c.params.n_fold
 
         # validation block 2
-        c.params.n_fold * 3 if c.params.fold in ["combinational_group", "combinational_purged"] else c.params.n_fold
+        # c.params.n_fold * 3 if c.params.fold in ["combinational_group", "combinational_purged"] else c.params.n_fold
     )
 
     for fold in range(num_fold):
