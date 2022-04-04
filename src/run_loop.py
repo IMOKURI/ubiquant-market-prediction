@@ -426,7 +426,7 @@ def train_fold_batch(c, input, fold, device):
     elif c.params.n_class > 1:
         # valid_folds["preds"] = es.best_preds
         # valid_folds[[str(c) for c in range(c.params.n_class)]] = es.best_preds
-        valid_folds["preds"] = 0 # es.best_preds.argmax(1)
+        valid_folds["preds"] = 0.0 # es.best_preds.argmax(1)
     else:
         raise Exception("Invalid n_class.")
 
