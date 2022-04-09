@@ -121,6 +121,8 @@ def load_model(c, device, pretrained=None):
 
         if training.model == "lightgbm":
             model = joblib.load(os.path.join(training.dir, "lightgbm.pkl"))
+        elif training.model == "xgboost":
+            model = make_model_xgboost(c, model_path=os.path.join(training.dir, "xgboost.pkl"))
         elif training.model == "tabnet":
             tabnet_zip = io.BytesIO()
             with zipfile.ZipFile(tabnet_zip, "w") as z:

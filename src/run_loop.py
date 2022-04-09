@@ -96,7 +96,7 @@ def train_fold_xgboost(c, df, fold):
     )
 
     os.makedirs(f"fold{fold}", exist_ok=True)
-    clf.save_model(f"fold{fold}/xgboost")
+    clf.save_model(f"fold{fold}/xgboost.pkl")
 
     valid_folds["preds"] = clf.predict(valid_ds)
 
