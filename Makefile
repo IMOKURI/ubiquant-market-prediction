@@ -24,6 +24,9 @@ train-batch: ## Run training by batch
 train-lgb: ## Run training by LightGBM
 	@nohup python train.py wandb.group=$(GROUP) settings.training_method="lightgbm" > /tmp/nohup_$(NOW).log &
 
+train-xgb: ## Run training by XGBoost
+	@nohup python train.py wandb.group=$(GROUP) settings.training_method="xgboost" > /tmp/nohup_$(NOW).log &
+
 train-tabnet: ## Run training by TabNet
 	@nohup python train.py wandb.group=$(GROUP) settings.training_method="tabnet" > /tmp/nohup_$(NOW).log &
 
@@ -35,6 +38,9 @@ debug-batch: ## Run training by batch debug mode
 
 debug-lgb: ## Run training by LightGBM debug mode
 	@python train.py settings.debug=True hydra.verbose=True settings.training_method="lightgbm"
+
+debug-xgb: ## Run training by XGBoost debug mode
+	@python train.py settings.debug=True hydra.verbose=True settings.training_method="xgboost"
 
 debug-tabnet: ## Run training by TabNet debug mode
 	@python train.py settings.debug=True hydra.verbose=True settings.training_method="tabnet"

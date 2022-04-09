@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.cuda.amp as amp
+import xgboost as xgb
 import wandb
 
 from .feature_store import Store
@@ -18,7 +19,7 @@ from .make_dataset import make_dataloader, make_dataset, make_dataset_general, m
 from .make_feature import make_feature
 from .make_fold import train_test_split
 from .make_loss import make_criterion, make_optimizer, make_scheduler
-from .make_model import make_model, make_model_tabnet
+from .make_model import make_model, make_model_tabnet, make_model_xgboost
 from .preprocess import apply_faiss_nearest_neighbors, save_training_features, save_training_targets
 from .run_epoch import inference_epoch, train_epoch, validate_epoch
 from .time_series_api import TimeSeriesAPI
@@ -78,6 +79,28 @@ def train_fold_lightgbm(c, df, fold):
     valid_folds["preds"] = booster.predict(valid_folds[feature_cols], num_iteration=booster.best_iteration)
 
     return valid_folds, 0, booster.best_score["valid"]["rmse"]
+
+
+def train_fold_xgboost(c, df, fold):
+    train_folds, valid_folds = train_test_split(c, df, fold)
+    train_ds, train_labels, valid_ds, valid_labels = make_dataset_general(c, train_folds, valid_folds)
+
+    clf = make_model_xgboost(c, train_ds)
+
+    clf.fit(
+        train_ds,
+        train_labels,
+        eval_set=[(valid_ds, valid_labels)],
+        verbose=100,
+        early_stopping_rounds=100,
+    )
+
+    os.makedirs(f"fold{fold}", exist_ok=True)
+    clf.save_model(f"fold{fold}/xgboost")
+
+    valid_folds["preds"] = clf.predict(valid_ds)
+
+    return valid_folds, 0, clf.best_score
 
 
 def train_fold_tabnet(c, df, fold):

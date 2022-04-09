@@ -64,8 +64,8 @@ settings:
   training_method: nn
 
 params:
-  seed: 16440
-  n_class: 10
+  seed: 17440
+  n_class: 1
   preprocess: []
     # - "standard_scaler"
     # - "power_transformer"
@@ -89,7 +89,7 @@ params:
   label_name: target
   use_feature: True
   feature_set:
-    # - "f000"  # f000_initial_features
+    - "f000"  # f000_initial_features
     # - "f001"  # f001_last10_features
     # - "f100"  # f100_vs_same_time_id_average
     # - "f101"  # f101_vs_same_time_id_max
@@ -97,7 +97,7 @@ params:
     # - "f200"  # f200_lag_last_features
     # - "f201"  # f201_lag_last_3_features
     # - "f202"  # f202_lag_last_4_features
-    - "f210"  # f210_lag_last_features_last10
+    # - "f210"  # f210_lag_last_features_last10
     # - "f300"  # f300_vs_nearest_neighbors_average
     # - "f301"  # f301_nearest_neighbors_target (mean)
     # - "f302"  # f302_nearest_neighbors_target_min
@@ -110,10 +110,10 @@ params:
     # - "f410"  # f410_moving_average_short_last10
     # - "f411"  # f411_moving_average_long_last10
     # - "f901"  # f901_pseudo_last_target
-    - "f902"  # f902_last10_target
+    # - "f902"  # f902_last10_target
     # - "f903"  # f903_feature_as_target
   dataset: ump_1
-  model: ump_lstm
+  model: ump_xgb
   model_input: 300
   model_window: 10
   # model_name: swin_large_patch4_window12_384_in22k
