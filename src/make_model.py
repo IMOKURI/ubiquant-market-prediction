@@ -50,9 +50,9 @@ def make_model_xgboost(c, ds=None, model_path=None):
     xgb_params = dict(
         n_estimators=10000,
         learning_rate=0.05,
-        eval_metric='rmse',
+        eval_metric="rmse",
         random_state=c.params.seed,
-        tree_method='gpu_hist',
+        tree_method="gpu_hist",
     )  # type: dict[str, Any]
 
     # if ds is not None:
@@ -219,10 +219,10 @@ class MLPModelTF(nn.Module):
         Tensorflow/Keras-like initialization
         """
         for name, p in self.named_parameters():
-            if 'fc' in name:
-                if 'weight' in name:
+            if "fc" in name:
+                if "weight" in name:
                     nn.init.xavier_uniform_(p.data)
-                elif 'bias' in name:
+                elif "bias" in name:
                     p.data.fill_(0)
 
     def forward(self, x):
@@ -322,22 +322,22 @@ class LSTMModelTF(nn.Module):
         Tensorflow/Keras-like initialization
         """
         for name, p in self.named_parameters():
-            if 'rnn' in name:
-                if 'weight_ih' in name:
+            if "rnn" in name:
+                if "weight_ih" in name:
                     nn.init.xavier_uniform_(p.data)
-                elif 'weight_hh' in name:
+                elif "weight_hh" in name:
                     nn.init.orthogonal_(p.data)
-                elif 'bias_ih' in name:
+                elif "bias_ih" in name:
                     p.data.fill_(0)
                     # Set forget-gate bias to 1
                     n = p.size(0)
-                    p.data[(n // 4):(n // 2)].fill_(1)
-                elif 'bias_hh' in name:
+                    p.data[(n // 4) : (n // 2)].fill_(1)
+                elif "bias_hh" in name:
                     p.data.fill_(0)
-            elif 'head' in name:
-                if 'weight' in name:
+            elif "head" in name:
+                if "weight" in name:
                     nn.init.xavier_uniform_(p.data)
-                elif 'bias' in name:
+                elif "bias" in name:
                     p.data.fill_(0)
 
     # def forward(self, x, h_c=None):
@@ -363,6 +363,7 @@ class TransformerModel(nn.Module):
     シングルGPUで実行する必要がある。
     （現状、マルチGPUの設定 DataParallel がたぶんよろしくない）
     """
+
     def __init__(self, c):
         super().__init__()
         self.amp = c.settings.amp
@@ -496,19 +497,15 @@ class SmallOneDCNNModel(nn.Module):
             nn.Conv1d(self.ch_1, self.ch_2, kernel_size=5, stride=1, padding=2, bias=True),
             nn.BatchNorm1d(self.ch_2),
             nn.LeakyReLU(),
-
             nn.Conv1d(self.ch_2, self.ch_2, kernel_size=4, stride=4, padding=0, bias=True),
             nn.BatchNorm1d(self.ch_2),
             nn.LeakyReLU(),
-
             nn.Conv1d(self.ch_2, self.ch_3, kernel_size=5, stride=1, padding=2, bias=True),
             nn.BatchNorm1d(self.ch_3),
             nn.LeakyReLU(),
-
             nn.Conv1d(self.ch_3, self.ch_3, kernel_size=4, stride=4, padding=0, bias=True),
             nn.BatchNorm1d(self.ch_3),
             nn.LeakyReLU(),
-
             nn.Conv1d(self.ch_3, self.ch_3, kernel_size=4, stride=2, padding=1, bias=True),
             nn.BatchNorm1d(self.ch_3),
             nn.LeakyReLU(),
@@ -520,15 +517,12 @@ class SmallOneDCNNModel(nn.Module):
             nn.Linear(self.head_size_1, self.head_size_1),
             nn.SiLU(),
             nn.Dropout(0.1),
-
             nn.Linear(self.head_size_1, self.head_size_2),
             nn.SiLU(),
             nn.Dropout(0.1),
-
             nn.Linear(self.head_size_2, self.head_size_3),
             nn.SiLU(),
             nn.Dropout(0.1),
-
             nn.Linear(self.head_size_3, c.params.n_class),
         )
 
@@ -579,23 +573,18 @@ class OneDCNNLSTMModel(nn.Module):
             nn.Conv1d(self.ch_1, self.ch_2, kernel_size=5, stride=1, padding=2, bias=True),
             nn.BatchNorm1d(self.ch_2),
             nn.LeakyReLU(),
-
             nn.Conv1d(self.ch_2, self.ch_2, kernel_size=4, stride=4, padding=0, bias=True),
             nn.BatchNorm1d(self.ch_2),
             nn.LeakyReLU(),
-
             nn.Conv1d(self.ch_2, self.ch_3, kernel_size=5, stride=1, padding=2, bias=True),
             nn.BatchNorm1d(self.ch_3),
             nn.LeakyReLU(),
-
             nn.Conv1d(self.ch_3, self.ch_3, kernel_size=4, stride=4, padding=0, bias=True),
             nn.BatchNorm1d(self.ch_3),
             nn.LeakyReLU(),
-
             nn.Conv1d(self.ch_3, self.ch_3, kernel_size=4, stride=2, padding=1, bias=True),
             nn.BatchNorm1d(self.ch_3),
             nn.LeakyReLU(),
-
             nn.Flatten(),
         )
 
@@ -605,11 +594,9 @@ class OneDCNNLSTMModel(nn.Module):
             nn.Linear(self.head_size_1, self.head_size_2),
             nn.SiLU(),
             nn.Dropout(0.1),
-
             nn.Linear(self.head_size_2, self.head_size_3),
             nn.SiLU(),
             nn.Dropout(0.1),
-
             nn.Linear(self.head_size_3, 1),
         )
 
@@ -631,4 +618,3 @@ class OneDCNNLSTMModel(nn.Module):
             x = self.head(x).view(-1, self.window_size)
 
         return x  # , h_c
-
